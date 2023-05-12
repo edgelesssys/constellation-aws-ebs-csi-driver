@@ -61,6 +61,7 @@ spec:
             {{- with .Values.node.loggingFormat }}
             - --logging-format={{ . }}
             {{- end }}
+            - "--kms-addr={{ .Values.kms.keyServiceName }}.{{ .Values.kms.keyServiceNamespace | default .Release.Namespace }}:{{ .Values.kms.keyServicePort }}"
             - --v={{ .Values.node.logLevel }}
           env:
             - name: CSI_ENDPOINT

@@ -13,6 +13,11 @@ customLabels:
   {}
   # k8s-app: aws-ebs-csi-driver
 
+kms:
+  keyServiceName: "key-service"
+  keyServicePort: 9000
+  keyServiceNamespace: "kube-system"
+
 sidecars:
   provisioner:
     env: []
