@@ -38,6 +38,7 @@ type Options struct {
 	*options.ServerOptions
 	*options.ControllerOptions
 	*options.NodeOptions
+	*options.KMSOptions
 }
 
 // used for testing
@@ -57,9 +58,11 @@ func GetOptions(fs *flag.FlagSet) *Options {
 		serverOptions     = options.ServerOptions{}
 		controllerOptions = options.ControllerOptions{}
 		nodeOptions       = options.NodeOptions{}
+		kmsOptions        = options.KMSOptions{}
 	)
 
 	serverOptions.AddFlags(fs)
+	kmsOptions.AddFlags(fs)
 
 	c := logsapi.NewLoggingConfiguration()
 
@@ -133,5 +136,6 @@ func GetOptions(fs *flag.FlagSet) *Options {
 		ServerOptions:     &serverOptions,
 		ControllerOptions: &controllerOptions,
 		NodeOptions:       &nodeOptions,
+		KMSOptions:        &kmsOptions,
 	}
 }

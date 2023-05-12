@@ -19,6 +19,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/edgelesssys/constellation/v2/csi/cryptmapper"
+	cryptKms "github.com/edgelesssys/constellation/v2/csi/kms"
 	flag "github.com/spf13/pflag"
 
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/cloud"
@@ -52,6 +54,12 @@ func main() {
 		}()
 	}
 
+	//Initialize CryptMapper
+	cm := cryptmapper.New(
+		cryptKms.NewConstellationKMS(options.KMSOptions.Addr),
+		&cryptmapper.CryptDevice{},
+	)
+
 	drv, err := driver.NewDriver(
 		driver.WithEndpoint(options.ServerOptions.Endpoint),
 		driver.WithExtraTags(options.ControllerOptions.ExtraTags),
@@ -61,6 +69,7 @@ func main() {
 		driver.WithKubernetesClusterID(options.ControllerOptions.KubernetesClusterID),
 		driver.WithAwsSdkDebugLog(options.ControllerOptions.AwsSdkDebugLog),
 		driver.WithWarnOnInvalidTag(options.ControllerOptions.WarnOnInvalidTag),
+		driver.WithCryptMapper(cm),
 	)
 	if err != nil {
 		klog.ErrorS(err, "failed to create driver")
