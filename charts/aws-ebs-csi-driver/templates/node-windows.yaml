@@ -110,7 +110,7 @@ spec:
             - name: ADDRESS
               value: unix:/csi/csi.sock
             - name: DRIVER_REG_SOCK_PATH
-              value: C:\var\lib\kubelet\plugins\ebs.csi.aws.com\csi.sock
+              value: C:\var\lib\kubelet\plugins\aws.csi.confidential.cloud\csi.sock
             {{- if .Values.proxy.http_proxy }}
             {{- include "aws-ebs-csi-driver.http-proxy" . | nindent 12 }}
             {{- end }}
@@ -131,7 +131,7 @@ spec:
             - name: registration-dir
               mountPath: C:\registration
             - name: probe-dir
-              mountPath: C:\var\lib\kubelet\plugins\ebs.csi.aws.com
+              mountPath: C:\var\lib\kubelet\plugins\aws.csi.confidential.cloud
           {{- with default .Values.node.resources .Values.sidecars.nodeDriverRegistrar.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -161,7 +161,7 @@ spec:
             type: Directory
         - name: plugin-dir
           hostPath:
-            path: C:\var\lib\kubelet\plugins\ebs.csi.aws.com
+            path: C:\var\lib\kubelet\plugins\aws.csi.confidential.cloud
             type: DirectoryOrCreate
         - name: registration-dir
           hostPath:
