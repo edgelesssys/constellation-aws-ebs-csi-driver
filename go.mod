@@ -3,7 +3,7 @@ module github.com/kubernetes-sigs/aws-ebs-csi-driver
 require (
 	github.com/aws/aws-sdk-go v1.44.218
 	github.com/container-storage-interface/spec v1.8.0
-	github.com/edgelesssys/constellation/v2 v2.7.1
+	github.com/edgelesssys/constellation/v2 v2.7.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/kubernetes-csi/csi-proxy/client v1.1.2
