@@ -30,9 +30,9 @@ RUN apt-get update && apt-get install -y libcryptsetup-dev
 RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
 
 # Driver image
-FROM debian:bullseye AS linux-amazon
+FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS linux-amazon
 
-RUN apt-get update && apt-get install -y libcryptsetup-dev ca-certificates
+RUN apt-get update && apt-get install -y util-linux e2fsprogs mount ca-certificates udev xfsprogs btrfs-progs libcryptsetup-dev
 
 COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver /bin/aws-ebs-csi-driver
 
