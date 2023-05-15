@@ -8,9 +8,6 @@ on:
         default: ""
         type: string
         required: false
-  push:
-    branches:
-      - main
 
 jobs:
   build-csi-driver:
@@ -33,9 +30,8 @@ jobs:
           mkdir constellation
           cd constellation
           git clone https://github.com/edgelesssys/constellation .
-          cd hack/pseudo-version
-          echo "pseudoVersion=$(go run .)" >> $GITHUB_ENV
-          echo ${{ env.pseudoVersion }}
+          echo "DRIVER_VERSION=${{ inputs.versionTag }}" >> $GITHUB_ENV
+
 
       - name: Build container image
         run: make image

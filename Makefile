@@ -27,7 +27,7 @@ GOBIN=$(shell pwd)/bin
 
 REGISTRY?=ghcr.io/edgelesssys/constellation
 IMAGE?=$(REGISTRY)/aws-csi-driver
-PSEUDOVERSION=$(pseudoVersion)
+DRIVER_VERSION=$(DRIVER_VERSION)
 TAG?=$(GIT_COMMIT)
 
 OUTPUT_TYPE?=docker
@@ -91,7 +91,7 @@ image: .image-$(TAG)-$(OS)-$(ARCH)-$(OSVERSION)
 		--platform=$(OS)/$(ARCH) \
 		--progress=plain \
 		--target=$(OS)-$(OSVERSION) \
-		-t=$(IMAGE):$(PSEUDOVERSION) \
+		-t=$(IMAGE):$(DRIVER_VERSION) \
 		--build-arg=GOPROXY=$(GOPROXY) \
 		--build-arg=VERSION=$(VERSION) \
 		.
