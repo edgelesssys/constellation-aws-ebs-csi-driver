@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/edgelesssys/constellation/v2/csi/cryptmapper"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/cloud"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/driver/internal"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/util"
@@ -173,11 +174,6 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		d.inFlight.Delete(volumeID)
 	}()
 
-	devicePath, ok := req.PublishContext[DevicePathKey]
-	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "Device path not provided")
-	}
-
 	partition := ""
 	if part, ok := volumeContext[VolumeAttributePartition]; ok {
 		if part != "0" {
@@ -187,9 +183,18 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		}
 	}
 
+	devicePath := filepath.Join("dev", "mapper", volumeID)
+	// Evaluate potential symlinks
 	source, err := d.findDevicePath(devicePath, volumeID, partition)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to find device path %s. %v", devicePath, err)
+	}
+
+	// [Edgeless] Map the device as a crypt device, creating a new LUKS partition if needed
+	fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
+	source, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, integrity)
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("NodeStageVolume failed on volume %v to %s, open crypt device failed (%v)", devicePath, target, err))
 	}
 
 	klog.V(4).InfoS("NodeStageVolume: find device path", "devicePath", devicePath, "source", source)
@@ -306,6 +311,12 @@ func (d *nodeService) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Could not unmount target %q: %v", target, err)
 	}
+
+	// [Edgeless] Unmap and remove crypt device from node
+	if err := d.driverOptions.cm.CloseCryptDevice(volumeID); err != nil {
+		return nil, status.Errorf(codes.Internal, "NodeUnstageVolume: failed to close mapped crypt device for disk %s (%v)", target, err)
+	}
+
 	klog.V(4).InfoS("NodeUnStageVolume: successfully unstaged volume", "volumeID", volumeID, "target", target)
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
@@ -321,12 +332,28 @@ func (d *nodeService) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandV
 		return nil, status.Error(codes.InvalidArgument, "volume path must be provided")
 	}
 
+	var devicePath string
+	var err error
 	volumeCapability := req.GetVolumeCapability()
 	// VolumeCapability is optional, if specified, use that as source of truth
 	if volumeCapability != nil {
 		caps := []*csi.VolumeCapability{volumeCapability}
 		if !isValidVolumeCapabilities(caps) {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("VolumeCapability is invalid: %v", volumeCapability))
+		}
+
+		// [Edgeless] Check if volume is integrity protected
+		if mnt := volumeCapability.GetMount(); mnt != nil {
+			if _, ok := cryptmapper.IsIntegrityFS(mnt.FsType); ok {
+				klog.V(4).InfoS("NodeExpandVolume: called, integrity protected devices can not be resized")
+				return nil, status.Error(codes.InvalidArgument, "integrity protected devices can not be resized")
+			}
+		}
+
+		// [Edgeless] Resize crypt device
+		devicePath, err = d.driverOptions.cm.ResizeCryptDevice(ctx, volumeID)
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("resizing crypt device: %s", err))
 		}
 
 		if blk := volumeCapability.GetBlock(); blk != nil {
@@ -347,19 +374,14 @@ func (d *nodeService) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandV
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, "failed to get block capacity on path %s: %v", req.VolumePath, err)
 			}
+
+			// [Edgeless] Reduce capacity by LUKS header size
+			// https://gitlab.com/cryptsetup/LUKS2-docs/blob/main/luks2_doc_wip.pdf
+			bcap = bcap - cryptmapper.LUKSHeaderSize
+
 			klog.V(4).InfoS("NodeExpandVolume: called, since given volumePath is a block device, ignoring...", "volumeID", volumeID, "volumePath", volumePath)
 			return &csi.NodeExpandVolumeResponse{CapacityBytes: bcap}, nil
 		}
-	}
-
-	deviceName, _, err := d.mounter.GetDeviceNameFromMount(volumePath)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get device name from mount %s: %v", volumePath, err)
-	}
-
-	devicePath, err := d.findDevicePath(deviceName, volumeID, "")
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to find device path for device name %s for mount %s: %v", deviceName, req.GetVolumePath(), err)
 	}
 
 	r, err := d.mounter.NewResizeFs()
@@ -376,6 +398,11 @@ func (d *nodeService) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandV
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get block capacity on path %s: %v", req.VolumePath, err)
 	}
+
+	// [Edgeless] Reduce capacity by LUKS header size
+	// https://gitlab.com/cryptsetup/LUKS2-docs/blob/main/luks2_doc_wip.pdf
+	bcap = bcap - cryptmapper.LUKSHeaderSize
+
 	return &csi.NodeExpandVolumeResponse{CapacityBytes: bcap}, nil
 }
 
@@ -572,10 +599,6 @@ func (d *nodeService) nodePublishVolumeForBlock(req *csi.NodePublishVolumeReques
 	volumeID := req.GetVolumeId()
 	volumeContext := req.GetVolumeContext()
 
-	devicePath, exists := req.PublishContext[DevicePathKey]
-	if !exists {
-		return status.Error(codes.InvalidArgument, "Device path not provided")
-	}
 	if isValidVolumeContext := isValidVolumeContext(volumeContext); !isValidVolumeContext {
 		return status.Error(codes.InvalidArgument, "Volume Attribute is invalid")
 	}
@@ -589,6 +612,7 @@ func (d *nodeService) nodePublishVolumeForBlock(req *csi.NodePublishVolumeReques
 		}
 	}
 
+	devicePath := filepath.Join("dev", "mapper", volumeID)
 	source, err := d.findDevicePath(devicePath, volumeID, partition)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Failed to find device path %s. %v", devicePath, err)
@@ -600,7 +624,7 @@ func (d *nodeService) nodePublishVolumeForBlock(req *csi.NodePublishVolumeReques
 
 	// create the global mount path if it is missing
 	// Path in the form of /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices/publish/{volumeName}
-	exists, err = d.mounter.PathExists(globalMountPath)
+	exists, err := d.mounter.PathExists(globalMountPath)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Could not check if path exists %q: %v", globalMountPath, err)
 	}
