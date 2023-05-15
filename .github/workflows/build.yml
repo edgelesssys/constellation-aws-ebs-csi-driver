@@ -31,7 +31,7 @@ jobs:
       - name: Pseudo version
         id: pseudo-version
         run: |
-          git clone https://github.com/edgelesssys/constellation /constellation
+          git clone https://github.com/edgelesssys/constellation
           cd /constellation/hack/pseudo-version
           echo "pseudoVersion=$(go run .)" >> $GITHUB_ENV
           echo ${{ env.pseudoVersion }}
