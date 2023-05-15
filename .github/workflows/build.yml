@@ -11,7 +11,6 @@ on:
   push:
     branches:
       - main
-      - feat/dm-crypt
 
 jobs:
   build-csi-driver:
@@ -32,6 +31,7 @@ jobs:
         id: pseudo-version
         run: |
           git clone https://github.com/edgelesssys/constellation
+          ls -la
           cd /constellation/hack/pseudo-version
           echo "pseudoVersion=$(go run .)" >> $GITHUB_ENV
           echo ${{ env.pseudoVersion }}
