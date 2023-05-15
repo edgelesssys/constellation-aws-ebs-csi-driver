@@ -46,9 +46,4 @@ jobs:
 
       - name: Push container image
         run: |
-          docker push ghcr.io/edgelesssys/constellation/aws-csi-driver:${{ env.pseudoVersion }}
-          if [ "${{ inputs.versionTag }}" != "" ]
-          then
-            docker tag ghcr.io/edgelesssys/constellation/aws-csi-driver:${{ env.pseudoVersion }} ghcr.io/edgelesssys/constellation/aws-csi-driver:${{ inputs.versionTag }}
-            docker push ghcr.io/edgelesssys/constellation/aws-csi-driver:${{ inputs.versionTag }}
-          fi
+          docker push ghcr.io/edgelesssys/constellation/aws-csi-driver:${{ inputs.versionTag }}
