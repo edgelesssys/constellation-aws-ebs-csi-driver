@@ -183,7 +183,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		}
 	}
 
-	devicePath := filepath.Join("dev", "mapper", volumeID)
+	devicePath := "/dev/mapper/" + volumeID
 	// Evaluate potential symlinks
 	source, err := d.findDevicePath(devicePath, volumeID, partition)
 	if err != nil {
@@ -192,6 +192,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 
 	// [Edgeless] Map the device as a crypt device, creating a new LUKS partition if needed
 	fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
+	klog.V(4).InfoS("OpenCryptDevice", source, volumeID, integrity)
 	source, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, integrity)
 	if err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("NodeStageVolume failed on volume %v to %s, open crypt device failed (%v)", devicePath, target, err))
@@ -612,7 +613,7 @@ func (d *nodeService) nodePublishVolumeForBlock(req *csi.NodePublishVolumeReques
 		}
 	}
 
-	devicePath := filepath.Join("dev", "mapper", volumeID)
+	devicePath := "/dev/mapper/" + volumeID
 	source, err := d.findDevicePath(devicePath, volumeID, partition)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Failed to find device path %s. %v", devicePath, err)

@@ -88,6 +88,8 @@ spec:
               mountPath: /csi
             - name: device-dir
               mountPath: /dev
+            - name: cryptsetup
+              mountPath: /run/cryptsetup
           ports:
             - name: healthz
               containerPort: 9808
@@ -198,3 +200,7 @@ spec:
             type: Directory
         - name: probe-dir
           emptyDir: {}
+        - name: cryptsetup
+          hostPath:
+            path: /run/cryptsetup
+            type: Directory
