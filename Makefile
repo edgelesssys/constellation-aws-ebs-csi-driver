@@ -30,7 +30,6 @@ IMAGE?=$(REGISTRY)/aws-csi-driver
 TAG?=$(GIT_COMMIT)
 
 OUTPUT_TYPE?=docker
-docker=DOCKER_BUILDKIT=1 docker
 
 OS?=linux
 ARCH?=amd64
@@ -87,7 +86,7 @@ sub-image-%:
 .PHONY: image
 image: .image-$(TAG)-$(OS)-$(ARCH)-$(OSVERSION)
 .image-$(TAG)-$(OS)-$(ARCH)-$(OSVERSION):
-	docker build \
+	DOCKER_BUILDKIT=1 docker build \
 		--platform=$(OS)/$(ARCH) \
 		--progress=plain \
 		--target=$(OS)-$(OSVERSION) \
