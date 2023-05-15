@@ -29,6 +29,11 @@ RUN apt-get update && apt-get install -y libcryptsetup-dev
 
 RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
 
-FROM public.ecr.aws/eks-distro-build-tooling/eks-distro-minimal-base-csi-ebs:latest.2 AS linux-amazon
+# Driver image
+FROM fedora:38
+
+RUN apt-get update && apt-get install -y libcryptsetup-dev
+
 COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver /bin/aws-ebs-csi-driver
+
 ENTRYPOINT ["/bin/aws-ebs-csi-driver"]
