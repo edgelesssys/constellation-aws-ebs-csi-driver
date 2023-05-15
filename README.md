@@ -1,7 +1,17 @@
+# AWS PVC CSI Driver for [Constellation](https://github.com/edgelesssys/constellation)
+
+This is a fork of the [AWS CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver), extending it by disk encryption features.
+
+## How to Build
+
+```bash
+gh workflow run build.yml --ref <branch> -F versionTag=v<version>
+```
+
 > **Warning**
-> 
+>
 > [`k8s.gcr.io` will be redirected on Monday March 20th](https://kubernetes.io/blog/2023/03/10/image-registry-redirect/), and may stop working entirely in the near future. If you are using `k8s.gcr.io` you MUST [move to `registry.k8s.io`](https://kubernetes.io/blog/2023/02/06/k8s-gcr-io-freeze-announcement/) to continue receiving support.
-> 
+>
 > Issues related to `k8s.gcr.io` will no longer be accepted. `public.ecr.aws` and `registry.k8s.io` images are unaffected and remain supported as per [the support policy](https://github.com/kubernetes-sigs/aws-ebs-csi-driver#support).
 
 # Amazon Elastic Block Store (EBS) CSI driver
