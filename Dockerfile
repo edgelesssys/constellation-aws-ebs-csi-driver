@@ -32,7 +32,7 @@ RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
 # Driver image
 FROM debian:bullseye AS linux-amazon
 
-RUN dnf install -y cryptsetup-libs && dnf clean all
+RUN apt-get update && apt-get install -y libcryptsetup-dev
 
 COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver /bin/aws-ebs-csi-driver
 
