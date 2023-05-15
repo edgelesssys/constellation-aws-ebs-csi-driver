@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y libcryptsetup-dev
 RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
 
 # Driver image
-FROM fedora:38
+FROM fedora:38 as linux-amazon
 
 RUN apt-get update && apt-get install -y libcryptsetup-dev
 
