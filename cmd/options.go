@@ -126,10 +126,6 @@ func GetOptions(fs *flag.FlagSet) *Options {
 		klog.SetOutput(os.Stderr)
 	}
 
-	if *toStderr {
-		klog.SetOutput(os.Stderr)
-	}
-
 	return &Options{
 		DriverMode: mode,
 
