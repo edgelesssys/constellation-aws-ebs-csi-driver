@@ -46,7 +46,7 @@ var (
 func TestNodeStageVolume(t *testing.T) {
 
 	var (
-		targetPath     = "/test/path"
+		targetPath     = "/dev/mapper"
 		devicePath     = "/dev/fake"
 		nvmeDevicePath = "/dev/nvmefake1n1"
 		deviceFileInfo = fs.FileInfo(&fakeFileInfo{devicePath, os.ModeDevice})
@@ -400,7 +400,7 @@ func TestNodeStageVolume(t *testing.T) {
 }
 
 func TestNodeUnstageVolume(t *testing.T) {
-	targetPath := "/test/path"
+	targetPath := "/dev/mapper"
 	devicePath := "/dev/fake"
 
 	testCases := []struct {
@@ -610,7 +610,7 @@ func TestNodeUnstageVolume(t *testing.T) {
 }
 
 func TestNodePublishVolume(t *testing.T) {
-	targetPath := "/test/path"
+	targetPath := "/dev/mapper"
 	stagingTargetPath := "/test/staging/path"
 	devicePath := "/dev/fake"
 	deviceFileInfo := fs.FileInfo(&fakeFileInfo{devicePath, os.ModeDevice})
@@ -1587,7 +1587,7 @@ func TestNodeExpandVolume(t *testing.T) {
 }
 
 func TestNodeUnpublishVolume(t *testing.T) {
-	targetPath := "/test/path"
+	targetPath := "/dev/mapper"
 
 	testCases := []struct {
 		name     string
