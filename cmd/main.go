@@ -54,7 +54,7 @@ func main() {
 		}()
 	}
 
-	//Initialize CryptMapper
+	// Initialize CryptMapper
 	cm := cryptmapper.New(
 		cryptKms.NewConstellationKMS(options.KMSOptions.Addr),
 		&cryptmapper.CryptDevice{},

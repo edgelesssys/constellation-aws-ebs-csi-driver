@@ -44,7 +44,6 @@ const (
 )
 
 func TestNewMetadataService(t *testing.T) {
-
 	validRawOutpostArn := "arn:aws:outposts:us-west-2:111111111111:outpost/op-0aaa000a0aaaa00a0"
 	validOutpostArn, _ := arn.Parse(strings.ReplaceAll(validRawOutpostArn, "outpost/", ""))
 
@@ -375,7 +374,6 @@ func TestNewMetadataService(t *testing.T) {
 
 					if tc.getMetadataValue != "" || tc.getMetadataError != nil {
 						mockEC2Metadata.EXPECT().GetMetadata(outpostArnEndpoint).Return(tc.getMetadataValue, tc.getMetadataError)
-
 					} else {
 						mockEC2Metadata.EXPECT().GetMetadata(outpostArnEndpoint).Return("", fmt.Errorf("404"))
 					}

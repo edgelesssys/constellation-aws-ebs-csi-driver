@@ -48,9 +48,7 @@ var (
 )
 
 var _ = Describe("EBS CSI Driver", func() {
-
 	It("Should create, attach, stage and mount volume, check if it's writable, unmount, unstage, detach, delete, and check if it's deleted", func() {
-
 		r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
 		req := &csi.CreateVolumeRequest{
 			Name:               fmt.Sprintf("volume-name-integration-test-%d", r1.Uint64()),
@@ -83,7 +81,6 @@ var _ = Describe("EBS CSI Driver", func() {
 		Expect(err).To(BeNil())
 		nodeID := metadata.GetInstanceID()
 		testAttachWriteReadDetach(volume.VolumeId, req.GetName(), nodeID, false)
-
 	})
 })
 
@@ -158,7 +155,7 @@ func testAttachWriteReadDetach(volumeID, volName, nodeID string, readOnly bool) 
 		// Write a file
 		testFileContents := []byte("sample content")
 		testFile := filepath.Join(publishDir, "testfile")
-		err := os.WriteFile(testFile, testFileContents, 0644)
+		err := os.WriteFile(testFile, testFileContents, 0o644)
 		Expect(err).To(BeNil(), "Failed to write file")
 		// Read the file and check if content is correct
 		data, err := os.ReadFile(testFile)

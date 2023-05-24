@@ -21,10 +21,11 @@ package driver
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/mounter"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/resizefs"
 	mountutils "k8s.io/mount-utils"
-	"regexp"
 )
 
 func (m NodeMounter) FormatAndMountSensitiveWithFormatOptions(source string, target string, fstype string, options []string, sensitiveOptions []string, formatOptions []string) error {

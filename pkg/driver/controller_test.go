@@ -45,7 +45,6 @@ const (
 )
 
 func TestNewControllerService(t *testing.T) {
-
 	var (
 		cloudObj   cloud.Cloud
 		testErr    = errors.New("test error")
@@ -2501,14 +2500,16 @@ func TestCreateSnapshot(t *testing.T) {
 				expOutput := &ec2.EnableFastSnapshotRestoresOutput{
 					Successful: []*ec2.EnableFastSnapshotRestoreSuccessItem{{
 						AvailabilityZone: aws.String("us-east-1a,us-east-1f"),
-						SnapshotId:       aws.String("snap-test-id")}},
+						SnapshotId:       aws.String("snap-test-id"),
+					}},
 					Unsuccessful: []*ec2.EnableFastSnapshotRestoreErrorItem{},
 				}
 
 				mockCloud := cloud.NewMockCloud(mockCtl)
 				mockCloud.EXPECT().GetSnapshotByName(gomock.Eq(ctx), gomock.Eq(req.GetName())).Return(nil, cloud.ErrNotFound).AnyTimes()
 				mockCloud.EXPECT().AvailabilityZones(gomock.Eq(ctx)).Return(map[string]struct{}{
-					"us-east-1a": {}, "us-east-1f": {}}, nil).AnyTimes()
+					"us-east-1a": {}, "us-east-1f": {},
+				}, nil).AnyTimes()
 				mockCloud.EXPECT().CreateSnapshot(gomock.Eq(ctx), gomock.Eq(req.SourceVolumeId), gomock.Eq(snapshotOptions)).Return(mockSnapshot, nil).AnyTimes()
 				mockCloud.EXPECT().EnableFastSnapshotRestores(gomock.Eq(ctx), gomock.Eq([]string{"us-east-1a", "us-east-1f"}), gomock.Eq(mockSnapshot.SnapshotID)).Return(expOutput, nil).AnyTimes()
 
@@ -2566,7 +2567,8 @@ func TestCreateSnapshot(t *testing.T) {
 				expOutput := &ec2.EnableFastSnapshotRestoresOutput{
 					Successful: []*ec2.EnableFastSnapshotRestoreSuccessItem{{
 						AvailabilityZone: aws.String("us-east-1a,us-east-1f"),
-						SnapshotId:       aws.String("snap-test-id")}},
+						SnapshotId:       aws.String("snap-test-id"),
+					}},
 					Unsuccessful: []*ec2.EnableFastSnapshotRestoreErrorItem{},
 				}
 
@@ -2632,7 +2634,8 @@ func TestCreateSnapshot(t *testing.T) {
 								AvailabilityZone: aws.String("us-west-1a,us-east-1f"),
 								Error: &ec2.EnableFastSnapshotRestoreStateError{
 									Message: aws.String("failed to create fast snapshot restore"),
-								}},
+								},
+							},
 						},
 					}},
 				}
@@ -2679,7 +2682,8 @@ func TestCreateSnapshot(t *testing.T) {
 				mockCloud := cloud.NewMockCloud(mockCtl)
 				mockCloud.EXPECT().GetSnapshotByName(gomock.Eq(ctx), gomock.Eq(req.GetName())).Return(nil, cloud.ErrNotFound).AnyTimes()
 				mockCloud.EXPECT().AvailabilityZones(gomock.Eq(ctx)).Return(map[string]struct{}{
-					"us-east-1a": {}, "us-east-1b": {}}, nil).AnyTimes()
+					"us-east-1a": {}, "us-east-1b": {},
+				}, nil).AnyTimes()
 
 				awsDriver := controllerService{
 					cloud:         mockCloud,
@@ -2728,7 +2732,8 @@ func TestCreateSnapshot(t *testing.T) {
 				mockCloud := cloud.NewMockCloud(mockCtl)
 				mockCloud.EXPECT().GetSnapshotByName(gomock.Eq(ctx), gomock.Eq(req.GetName())).Return(nil, cloud.ErrNotFound).AnyTimes()
 				mockCloud.EXPECT().AvailabilityZones(gomock.Eq(ctx)).Return(map[string]struct{}{
-					"us-east-1a": {}, "us-east-1f": {}}, nil).AnyTimes()
+					"us-east-1a": {}, "us-east-1f": {},
+				}, nil).AnyTimes()
 				mockCloud.EXPECT().CreateSnapshot(gomock.Eq(ctx), gomock.Eq(req.SourceVolumeId), gomock.Eq(snapshotOptions)).Return(mockSnapshot, nil).AnyTimes()
 				mockCloud.EXPECT().EnableFastSnapshotRestores(gomock.Eq(ctx), gomock.Eq([]string{"us-east-1a", "us-east-1f"}),
 					gomock.Eq(mockSnapshot.SnapshotID)).Return(nil, fmt.Errorf("error")).AnyTimes()

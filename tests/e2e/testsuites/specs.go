@@ -65,9 +65,7 @@ const (
 	APIVersionv1              = "v1"
 )
 
-var (
-	SnapshotAPIGroup = "snapshot.storage.k8s.io"
-)
+var SnapshotAPIGroup = "snapshot.storage.k8s.io"
 
 type VolumeMountDetails struct {
 	NameGenerate      string

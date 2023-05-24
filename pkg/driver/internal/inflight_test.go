@@ -35,7 +35,6 @@ func TestInFlight(t *testing.T) {
 			name: "success normal",
 			requests: []testRequest{
 				{
-
 					volumeId: "random-vol-name",
 					expResp:  true,
 				},
@@ -103,6 +102,5 @@ func TestInFlight(t *testing.T) {
 				}
 			}
 		})
-
 	}
 }

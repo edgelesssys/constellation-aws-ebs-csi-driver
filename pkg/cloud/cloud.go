@@ -132,7 +132,7 @@ const (
 	KubernetesTagKeyPrefix = "kubernetes.io"
 	// AWSTagKeyPrefix is the prefix of the key value that is reserved for AWS.
 	AWSTagKeyPrefix = "aws:"
-	//AwsEbsDriverTagKey is the tag to identify if a volume/snapshot is managed by ebs csi driver
+	// AwsEbsDriverTagKey is the tag to identify if a volume/snapshot is managed by ebs csi driver
 	AwsEbsDriverTagKey = "ebs.csi.aws.com/cluster"
 )
 
@@ -499,7 +499,6 @@ func (c *cloud) AttachDisk(ctx context.Context, volumeID, nodeID string) (string
 	}
 
 	attachment, err := c.WaitForAttachmentState(ctx, volumeID, volumeAttachedState, *instance.InstanceId, device.Path, device.IsAlreadyAssigned)
-
 	// This is the only situation where we taint the device
 	if err != nil {
 		device.Taint()
@@ -711,7 +710,6 @@ func (c *cloud) GetDiskByID(ctx context.Context, volumeID string) (*Disk, error)
 	}
 
 	volume, err := c.getVolume(ctx, request)
-
 	if err != nil {
 		return nil, err
 	}

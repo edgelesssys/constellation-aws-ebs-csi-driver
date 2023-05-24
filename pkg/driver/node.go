@@ -42,28 +42,24 @@ const (
 	// VolumeOperationAlreadyExists is message fmt returned to CO when there is another in-flight call on the given volumeID
 	VolumeOperationAlreadyExists = "An operation with the given volume=%q is already in progress"
 
-	//sbeDeviceVolumeAttachmentLimit refers to the maximum number of volumes that can be attached to an instance on snow.
+	// sbeDeviceVolumeAttachmentLimit refers to the maximum number of volumes that can be attached to an instance on snow.
 	sbeDeviceVolumeAttachmentLimit = 10
 )
 
-var (
-	ValidFSTypes = map[string]struct{}{
-		FSTypeExt2: {},
-		FSTypeExt3: {},
-		FSTypeExt4: {},
-		FSTypeXfs:  {},
-		FSTypeNtfs: {},
-	}
-)
+var ValidFSTypes = map[string]struct{}{
+	FSTypeExt2: {},
+	FSTypeExt3: {},
+	FSTypeExt4: {},
+	FSTypeXfs:  {},
+	FSTypeNtfs: {},
+}
 
-var (
-	// nodeCaps represents the capability of node service.
-	nodeCaps = []csi.NodeServiceCapability_RPC_Type{
-		csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
-		csi.NodeServiceCapability_RPC_EXPAND_VOLUME,
-		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
-	}
-)
+// nodeCaps represents the capability of node service.
+var nodeCaps = []csi.NodeServiceCapability_RPC_Type{
+	csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
+	csi.NodeServiceCapability_RPC_EXPAND_VOLUME,
+	csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
+}
 
 // nodeService represents the node service of CSI driver
 type nodeService struct {
@@ -506,7 +502,6 @@ func (d *nodeService) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVo
 	}
 
 	isBlock, err := d.IsBlockDevice(req.VolumePath)
-
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to determine whether %s is block device: %v", req.VolumePath, err)
 	}
@@ -548,7 +543,6 @@ func (d *nodeService) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVo
 			},
 		},
 	}, nil
-
 }
 
 func (d *nodeService) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
@@ -645,7 +639,7 @@ func (d *nodeService) nodePublishVolumeForBlock(req *csi.NodePublishVolumeReques
 		return status.Errorf(codes.Internal, "Could not create file %q: %v", target, err)
 	}
 
-	//Checking if the target file is already mounted with a device.
+	// Checking if the target file is already mounted with a device.
 	mounted, err := d.isMounted(source, target)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Could not check if %q is mounted: %v", target, err)
@@ -677,14 +671,14 @@ func (d *nodeService) isMounted(_ string, target string) (bool, error) {
 	*/
 	notMnt, err := d.mounter.IsLikelyNotMountPoint(target)
 	if err != nil && !os.IsNotExist(err) {
-		//Checking if the path exists and error is related to Corrupted Mount, in that case, the system could unmount and mount.
+		// Checking if the path exists and error is related to Corrupted Mount, in that case, the system could unmount and mount.
 		_, pathErr := d.mounter.PathExists(target)
 		if pathErr != nil && d.mounter.IsCorruptedMnt(pathErr) {
 			klog.V(4).InfoS("NodePublishVolume: Target path is a corrupted mount. Trying to unmount.", "target", target)
 			if mntErr := d.mounter.Unpublish(target); mntErr != nil {
 				return false, status.Errorf(codes.Internal, "Unable to unmount the target %q : %v", target, mntErr)
 			}
-			//After successful unmount, the device is ready to be mounted.
+			// After successful unmount, the device is ready to be mounted.
 			return false, nil
 		}
 		return false, status.Errorf(codes.Internal, "Could not check if %q is a mount point: %v, %v", target, err, pathErr)
@@ -723,7 +717,7 @@ func (d *nodeService) nodePublishVolumeForFileSystem(req *csi.NodePublishVolumeR
 		return status.Errorf(codes.Internal, err.Error())
 	}
 
-	//Checking if the target directory is already mounted with a device.
+	// Checking if the target directory is already mounted with a device.
 	mounted, err := d.isMounted(source, target)
 	if err != nil {
 		return status.Errorf(codes.Internal, "Could not check if %q is mounted: %v", target, err)

@@ -466,7 +466,7 @@ func (mounter *CSIProxyMounter) GetDeviceSize(devicePath string) (int64, error) 
 		return -1, err
 	}
 
-	//Get size of the disk
+	// Get size of the disk
 	getDiskStatsRequest := &disk.GetDiskStatsRequest{
 		DiskNumber: uint32(diskNumber),
 	}

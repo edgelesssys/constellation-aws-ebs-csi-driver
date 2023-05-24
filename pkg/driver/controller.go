@@ -554,8 +554,8 @@ func isValidVolumeCapabilities(volCaps []*csi.VolumeCapability) bool {
 }
 
 func isValidVolumeContext(volContext map[string]string) bool {
-	//There could be multiple volume attributes in the volumeContext map
-	//Validate here case by case
+	// There could be multiple volume attributes in the volumeContext map
+	// Validate here case by case
 	if partition, ok := volContext[VolumeAttributePartition]; ok {
 		partitionInt, err := strconv.ParseInt(partition, 10, 64)
 		if err != nil {
@@ -878,7 +878,6 @@ func newCreateSnapshotResponse(snapshot *cloud.Snapshot) (*csi.CreateSnapshotRes
 }
 
 func newListSnapshotsResponse(cloudResponse *cloud.ListSnapshotsResponse) *csi.ListSnapshotsResponse {
-
 	var entries []*csi.ListSnapshotsResponse_Entry
 	for _, snapshot := range cloudResponse.Snapshots {
 		snapshotResponseEntry := newListSnapshotsResponseEntry(snapshot)
@@ -921,7 +920,6 @@ func getVolSizeBytes(req *csi.CreateVolumeRequest) (int64, error) {
 
 // BuildOutpostArn returns the string representation of the outpost ARN from the given csi.TopologyRequirement.segments
 func BuildOutpostArn(segments map[string]string) string {
-
 	if len(segments[AwsPartitionKey]) <= 0 {
 		return ""
 	}

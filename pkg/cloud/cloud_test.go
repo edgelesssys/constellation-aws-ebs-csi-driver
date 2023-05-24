@@ -935,7 +935,8 @@ func TestGetDiskByID(t *testing.T) {
 			outpostArn:       "arn:aws:outposts:us-west-2:111111111111:outpost/op-0aaa000a0aaaa00a0",
 			attachments: &ec2.VolumeAttachment{
 				InstanceId: aws.String("test-instance"),
-				State:      aws.String("attached")},
+				State:      aws.String("attached"),
+			},
 			expErr: nil,
 		},
 		{
@@ -1095,7 +1096,8 @@ func TestEnableFastSnapshotRestores(t *testing.T) {
 			expOutput: &ec2.EnableFastSnapshotRestoresOutput{
 				Successful: []*ec2.EnableFastSnapshotRestoreSuccessItem{{
 					AvailabilityZone: aws.String("us-west-2a,us-west-2b"),
-					SnapshotId:       aws.String("snap-test-id")}},
+					SnapshotId:       aws.String("snap-test-id"),
+				}},
 				Unsuccessful: []*ec2.EnableFastSnapshotRestoreErrorItem{},
 			},
 			expErr: nil,
@@ -1108,9 +1110,12 @@ func TestEnableFastSnapshotRestores(t *testing.T) {
 				Unsuccessful: []*ec2.EnableFastSnapshotRestoreErrorItem{{
 					SnapshotId: aws.String("snap-test-id"),
 					FastSnapshotRestoreStateErrors: []*ec2.EnableFastSnapshotRestoreStateErrorItem{
-						{AvailabilityZone: aws.String("us-west-2a,invalid-zone"),
+						{
+							AvailabilityZone: aws.String("us-west-2a,invalid-zone"),
 							Error: &ec2.EnableFastSnapshotRestoreStateError{
-								Message: aws.String("failed to create fast snapshot restore")}},
+								Message: aws.String("failed to create fast snapshot restore"),
+							},
+						},
 					},
 				}},
 			},
@@ -1177,7 +1182,8 @@ func TestAvailabilityZones(t *testing.T) {
 			expOutput: &ec2.DescribeAvailabilityZonesOutput{
 				AvailabilityZones: []*ec2.AvailabilityZone{
 					{ZoneName: aws.String(expZone)},
-				}},
+				},
+			},
 			expErr: nil,
 		},
 		{
@@ -1542,6 +1548,7 @@ func TestGetSnapshotByID(t *testing.T) {
 		})
 	}
 }
+
 func TestListSnapshots(t *testing.T) {
 	testCases := []struct {
 		name     string

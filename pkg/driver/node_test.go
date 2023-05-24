@@ -2097,6 +2097,7 @@ func TestNodeGetInfo(t *testing.T) {
 
 			driverOptions := &DriverOptions{
 				volumeAttachLimit: tc.volumeAttachLimit,
+				cm: &stubCryptMapper{}
 			}
 
 			mockMounter := NewMockMounter(mockCtl)
@@ -2178,4 +2179,27 @@ func expectErr(t *testing.T, actualErr error, expectedCode codes.Code) {
 	if status.Code() != expectedCode {
 		t.Fatalf("Expected error code %d, got %d message %s", codes.InvalidArgument, status.Code(), status.Message())
 	}
+}
+
+type stubCryptMapper struct {
+	CloseCryptDeviceErr error
+	OpenCryptDeviceErr  error
+	ResizeCryptDeviceErr error
+	GetDevicePathErr    error
+}
+
+func (s *stubCryptMapper) CloseCryptDevice(volumeID string) error {
+	return s.CloseCryptDeviceErr
+}
+
+func (s *stubCryptMapper) OpenCryptDevice(ctx context.Context, source string, volumeID string, integrity bool) (string, error) {
+	return "", s.OpenCryptDeviceErr
+}
+
+func (s *stubCryptMapper) ResizeCryptDevice(ctx context.Context, volumeID string) (string, error) {
+	return "", s.ResizeCryptDeviceErr
+}
+
+func (s *stubCryptMapper) GetDevicePath(volumeID string) (string, error) {
+	return "", s.GetDevicePathErr
 }

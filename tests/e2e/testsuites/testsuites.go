@@ -185,8 +185,8 @@ func (t *TestVolumeSnapshotClass) UpdateStaticVolumeSnapshotContent(volumeSnapsh
 	volumeSnapshotContent.Spec.VolumeSnapshotRef.Name = volumeSnapshot.Name
 	_, err := snapshotclientset.New(t.client).SnapshotV1().VolumeSnapshotContents().Update(context.TODO(), volumeSnapshotContent, metav1.UpdateOptions{})
 	framework.ExpectNoError(err)
-
 }
+
 func (t *TestVolumeSnapshotClass) ReadyToUse(snapshot *volumesnapshotv1.VolumeSnapshot) {
 	By("waiting for VolumeSnapshot to be ready to use - " + snapshot.Name)
 	err := wait.Poll(15*time.Second, 5*time.Minute, func() (bool, error) {
