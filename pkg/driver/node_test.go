@@ -422,6 +422,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().GetDeviceNameFromMount(gomock.Eq(targetPath)).Return(devicePath, 1, nil)
@@ -453,6 +456,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().GetDeviceNameFromMount(gomock.Eq(targetPath)).Return(devicePath, 0, nil)
@@ -482,6 +488,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().GetDeviceNameFromMount(gomock.Eq(targetPath)).Return(devicePath, 2, nil)
@@ -513,6 +522,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnstageVolumeRequest{
@@ -538,6 +550,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnstageVolumeRequest{
@@ -562,6 +577,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().GetDeviceNameFromMount(gomock.Eq(targetPath)).Return("", 0, errors.New("GetDeviceName faield"))
@@ -590,6 +608,9 @@ func TestNodeUnstageVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnstageVolumeRequest{
@@ -643,6 +664,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().MakeDir(gomock.Eq(targetPath)).Return(nil)
@@ -678,6 +702,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().MakeDir(gomock.Eq(targetPath)).Return(nil)
@@ -712,6 +739,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -747,6 +777,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().PathExists(gomock.Eq(targetPath)).Return(true, errors.New("CorruptedMntError"))
@@ -786,6 +819,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().MakeDir(gomock.Eq(targetPath)).Return(nil)
@@ -830,6 +866,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().MakeDir(gomock.Eq(targetPath)).Return(nil)
@@ -866,6 +905,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				mockMounter.EXPECT().MakeDir(gomock.Eq(targetPath)).Return(nil)
@@ -914,6 +956,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -962,6 +1007,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -1009,6 +1057,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -1056,6 +1107,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -1109,6 +1163,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -1158,6 +1215,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				gomock.InOrder(
@@ -1207,6 +1267,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1244,6 +1307,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1280,6 +1346,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1319,6 +1388,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1348,6 +1420,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1377,6 +1452,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1406,6 +1484,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1434,6 +1515,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1468,6 +1552,9 @@ func TestNodePublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodePublishVolumeRequest{
@@ -1510,6 +1597,9 @@ func TestNodeExpandVolume(t *testing.T) {
 		mounter:          mockMounter,
 		deviceIdentifier: mockDeviceIdentifier,
 		inFlight:         internal.NewInFlight(),
+		driverOptions: &DriverOptions{
+			cm: &stubCryptMapper{},
+		},
 	}
 
 	tests := []struct {
@@ -1608,6 +1698,9 @@ func TestNodeUnpublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnpublishVolumeRequest{
@@ -1637,6 +1730,9 @@ func TestNodeUnpublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnpublishVolumeRequest{
@@ -1662,6 +1758,9 @@ func TestNodeUnpublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnpublishVolumeRequest{
@@ -1687,6 +1786,9 @@ func TestNodeUnpublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnpublishVolumeRequest{
@@ -1714,6 +1816,9 @@ func TestNodeUnpublishVolume(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeUnpublishVolumeRequest{
@@ -1761,6 +1866,9 @@ func TestNodeGetVolumeStats(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeGetVolumeStatsRequest{
@@ -1791,6 +1899,9 @@ func TestNodeGetVolumeStats(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeGetVolumeStatsRequest{
@@ -1819,6 +1930,9 @@ func TestNodeGetVolumeStats(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeGetVolumeStatsRequest{
@@ -1847,6 +1961,9 @@ func TestNodeGetVolumeStats(t *testing.T) {
 					mounter:          mockMounter,
 					deviceIdentifier: mockDeviceIdentifier,
 					inFlight:         internal.NewInFlight(),
+					driverOptions: &DriverOptions{
+						cm: &stubCryptMapper{},
+					},
 				}
 
 				req := &csi.NodeGetVolumeStatsRequest{
@@ -1878,6 +1995,9 @@ func TestNodeGetCapabilities(t *testing.T) {
 		mounter:          mockMounter,
 		deviceIdentifier: mockDeviceIdentifier,
 		inFlight:         internal.NewInFlight(),
+		driverOptions: &DriverOptions{
+			cm: &stubCryptMapper{},
+		},
 	}
 
 	caps := []*csi.NodeServiceCapability{
