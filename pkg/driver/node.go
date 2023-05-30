@@ -121,25 +121,6 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		return nil, status.Error(codes.InvalidArgument, "Volume Attribute is not valid")
 	}
 
-	// If the access type is block, only map the crypt device for stage
-	switch volCap.GetAccessType().(type) {
-	case *csi.VolumeCapability_Block:
-		devicePath := "/dev/mapper/" + volumeID
-		// Evaluate potential symlinks
-		source, err := d.findDevicePath(devicePath, volumeID, "")
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Failed to find device path %s. %v", devicePath, err)
-		}
-
-		// [Edgeless] Map the device as a crypt device, creating a new LUKS partition if needed
-		klog.V(4).InfoS("OpenCryptDevice [Block]", source, volumeID, false)
-		source, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, false)
-		if err != nil {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("NodeStageVolume failed on volume %v to %s, open crypt device [block] failed (%v)", devicePath, target, err))
-		}
-		return &csi.NodeStageVolumeResponse{}, nil
-	}
-
 	mountVolume := volCap.GetMount()
 	if mountVolume == nil {
 		return nil, status.Error(codes.InvalidArgument, "NodeStageVolume: mount is nil within volume capability")
@@ -153,6 +134,28 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	_, ok := ValidFSTypes[strings.ToLower(fsType)]
 	if !ok {
 		return nil, status.Errorf(codes.InvalidArgument, "NodeStageVolume: invalid fstype %s", fsType)
+	}
+
+	// Check if integrity protection is needed
+	fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
+
+	// If the access type is block, only map the crypt device for stage
+	switch volCap.GetAccessType().(type) {
+	case *csi.VolumeCapability_Block:
+		devicePath := "/dev/mapper/" + volumeID
+		// Evaluate potential symlinks
+		source, err := d.findDevicePath(devicePath, volumeID, "")
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Failed to find device path %s. %v", devicePath, err)
+		}
+
+		// [Edgeless] Map the device as a crypt device, creating a new LUKS partition if needed
+		klog.V(4).InfoS("OpenCryptDevice [Block]", source, volumeID, integrity)
+		source, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, integrity)
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("NodeStageVolume failed on volume %v to %s, open crypt device [block] failed (%v)", devicePath, target, err))
+		}
+		return &csi.NodeStageVolumeResponse{}, nil
 	}
 
 	context := req.GetVolumeContext()
@@ -200,7 +203,6 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	// [Edgeless] Map the device as a crypt device, creating a new LUKS partition if needed
-	fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
 	klog.V(4).InfoS("OpenCryptDevice", source, volumeID, integrity)
 	source, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, integrity)
 	if err != nil {
