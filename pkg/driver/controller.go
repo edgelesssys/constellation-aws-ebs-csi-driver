@@ -36,6 +36,11 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	// minVolumeSizeBytes is the minimum volume size supported by the driver (1 GiB)
+	minVolumeSizeBytes = 1 * 1024 * 1024 * 1024 // 1 GiB
+)
+
 var (
 	// volumeCaps represents how the volume could be accessed.
 	// It is SINGLE_NODE_WRITER since EBS volume could only be
@@ -108,6 +113,9 @@ func (d *controllerService) CreateVolume(ctx context.Context, req *csi.CreateVol
 	volSizeBytes, err := getVolSizeBytes(req)
 	if err != nil {
 		return nil, err
+	}
+	if volSizeBytes <= minVolumeSizeBytes {
+		return nil, fmt.Errorf("volume size %d is too small (minimal required size is %d)", volSizeBytes, minVolumeSizeBytes)
 	}
 	volName := req.GetName()
 
