@@ -136,13 +136,18 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		return nil, status.Errorf(codes.InvalidArgument, "NodeStageVolume: invalid fstype %s", fsType)
 	}
 
+	devicePath, ok := req.PublishContext[DevicePathKey]
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "Device path not provided")
+	}
+
 	// Check if integrity protection is needed
 	fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
 
 	// If the access type is block, only map the crypt device for stage
 	switch volCap.GetAccessType().(type) {
 	case *csi.VolumeCapability_Block:
-		devicePath := "/dev/mapper/" + volumeID
+		// TODO: check if device was already mounted before this step
 		// Evaluate potential symlinks
 		source, err := d.findDevicePath(devicePath, volumeID, "")
 		if err != nil {
@@ -195,7 +200,6 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		}
 	}
 
-	devicePath := "/dev/mapper/" + volumeID
 	// Evaluate potential symlinks
 	source, err := d.findDevicePath(devicePath, volumeID, partition)
 	if err != nil {
