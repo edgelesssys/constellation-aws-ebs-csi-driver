@@ -18,7 +18,6 @@ package driver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
