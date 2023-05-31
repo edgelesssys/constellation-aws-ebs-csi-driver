@@ -383,6 +383,9 @@ func TestNodeStageVolume(t *testing.T) {
 				mounter:          mockMounter,
 				deviceIdentifier: mockDeviceIdentifier,
 				inFlight:         inFlight,
+				driverOptions: &DriverOptions{
+					cm: &stubCryptMapper{},
+				},
 			}
 
 			if tc.expectMock != nil {
