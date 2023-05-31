@@ -485,6 +485,42 @@ func TestCreateVolume(t *testing.T) {
 			},
 		},
 		{
+			name: "fail volume too small",
+			testFunc: func(t *testing.T) {
+				req := &csi.CreateVolumeRequest{
+					Name:               "vol-test",
+					CapacityRange:      &csi.CapacityRange{RequiredBytes: 10},
+					VolumeCapabilities: stdVolCap,
+					Parameters:         stdParams,
+				}
+
+				ctx := context.Background()
+
+				mockCtl := gomock.NewController(t)
+				defer mockCtl.Finish()
+
+				mockCloud := cloud.NewMockCloud(mockCtl)
+
+				awsDriver := controllerService{
+					cloud:         mockCloud,
+					inFlight:      internal.NewInFlight(),
+					driverOptions: &DriverOptions{},
+				}
+
+				if _, err := awsDriver.CreateVolume(ctx, req); err != nil {
+					srvErr, ok := status.FromError(err)
+					if !ok {
+						t.Fatalf("Could not get error status code from error: %v", srvErr)
+					}
+					if srvErr.Code() != codes.InvalidArgument {
+						t.Fatalf("Expected error code %d, got %d message %s", codes.InvalidArgument, srvErr.Code(), srvErr.Message())
+					}
+				} else {
+					t.Fatalf("Expected error %v, got no error", codes.InvalidArgument)
+				}
+			},
+		},
+		{
 			name: "success same name and same capacity",
 			testFunc: func(t *testing.T) {
 				req := &csi.CreateVolumeRequest{
@@ -582,7 +618,7 @@ func TestCreateVolume(t *testing.T) {
 				}
 				extraReq := &csi.CreateVolumeRequest{
 					Name:               "test-vol",
-					CapacityRange:      &csi.CapacityRange{RequiredBytes: 10000},
+					CapacityRange:      &csi.CapacityRange{RequiredBytes: 9 * 1024 * 1024 * 1024},
 					VolumeCapabilities: stdVolCap,
 					Parameters:         stdParams,
 				}

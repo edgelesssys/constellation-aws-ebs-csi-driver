@@ -115,7 +115,7 @@ func (d *controllerService) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, err
 	}
 	if volSizeBytes <= minVolumeSizeBytes {
-		return nil, fmt.Errorf("volume size %d is too small (minimal required size is %d)", volSizeBytes, minVolumeSizeBytes)
+		return nil, status.Errorf(codes.InvalidArgument, "volume size %d is too small (minimal required size is %d)", volSizeBytes, minVolumeSizeBytes)
 	}
 	volName := req.GetName()
 
