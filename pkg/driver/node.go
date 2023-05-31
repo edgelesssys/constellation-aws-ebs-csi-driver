@@ -148,20 +148,19 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	// If the access type is block, only map the crypt device for stage
 	switch volCap.GetAccessType().(type) {
 	case *csi.VolumeCapability_Block:
-		// check if device was already mounted before
-		_, err := os.Stat("/dev/mapper/" + volumeID)
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			return nil, status.Error(codes.Internal, "Failed to check if device has been mounted before")
-		}
-		if err == nil {
-			// device was mounted before
-			return &csi.NodeStageVolumeResponse{}, nil
-		}
-
 		// Evaluate potential symlinks
 		source, err := d.findDevicePath(devicePath, volumeID, "") // no partition
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Failed to find device path %s. %v", devicePath, err)
+		}
+
+		// check if device was already mounted before
+		mounted, err := d.isMounted(source, target)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "Could not check if %q is mounted: %v", target, err)
+		}
+		if mounted {
+			return &csi.NodeStageVolumeResponse{}, nil
 		}
 
 		// [Edgeless] Map the device as a crypt device, creating a new LUKS partition if needed
