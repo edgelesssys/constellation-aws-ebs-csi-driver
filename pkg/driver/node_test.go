@@ -112,6 +112,7 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeId: volumeID,
 			},
 			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
+				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
 				// not expected, as block should be no-op on block
 				// mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
 			},
@@ -191,9 +192,8 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeId:          volumeID,
 			},
 			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().PathExists(gomock.Eq(targetPath)).Return(true, nil)
-				mockMounter.EXPECT().GetDeviceNameFromMount(targetPath).Return(devicePath, 1, nil)
 				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
+				mockMounter.EXPECT().GetDeviceNameFromMount(targetPath).Return(devicePath, 1, nil)
 				mockDeviceIdentifier.EXPECT().Lstat(gomock.Eq(devicePath)).Return(deviceFileInfo, nil)
 
 				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
@@ -208,7 +208,7 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeId:          volumeID,
 			},
 			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().PathExists(gomock.Eq(targetPath)).Return(true, nil)
+				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
 
 				// If the device is nvme GetDeviceNameFromMount should return the
 				// canonical device path
@@ -218,7 +218,6 @@ func TestNodeStageVolume(t *testing.T) {
 				// find the canonical device path (see TestFindDevicePath), compare it
 				// to the one returned by GetDeviceNameFromMount, and then skip
 				// FormatAndMountSensitiveWithFormatOptions
-				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(false, nil)
 				mockDeviceIdentifier.EXPECT().Lstat(gomock.Eq(nvmeName)).Return(symlinkFileInfo, nil)
 				mockDeviceIdentifier.EXPECT().EvalSymlinks(gomock.Eq(symlinkFileInfo.Name())).Return(nvmeDevicePath, nil)
 
@@ -362,6 +361,9 @@ func TestNodeStageVolume(t *testing.T) {
 				return inFlight
 			},
 			expectedCode: codes.Aborted,
+			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
+				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
+			},
 		},
 	}
 
