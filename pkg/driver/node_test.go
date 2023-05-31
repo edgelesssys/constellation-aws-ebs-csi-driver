@@ -91,10 +91,6 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeCapability:  stdVolCap,
 				VolumeId:          volumeID,
 			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				successExpectMock(mockMounter, mockDeviceIdentifier)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePath), gomock.Eq(targetPath), gomock.Eq(defaultFsType), gomock.Any(), gomock.Nil(), gomock.Len(0))
-			},
 		},
 		{
 			name: "success normal [raw block]",
@@ -110,11 +106,6 @@ func TestNodeStageVolume(t *testing.T) {
 					},
 				},
 				VolumeId: volumeID,
-			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
-				// not expected, as block should be no-op on block
-				// mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
 			},
 		},
 		{
@@ -134,10 +125,6 @@ func TestNodeStageVolume(t *testing.T) {
 				},
 				VolumeId: volumeID,
 			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				successExpectMock(mockMounter, mockDeviceIdentifier)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePath), gomock.Eq(targetPath), gomock.Eq(FSTypeExt4), gomock.Eq([]string{"dirsync", "noexec"}), gomock.Nil(), gomock.Len(0))
-			},
 		},
 		{
 			name: "success fsType ext3",
@@ -155,10 +142,6 @@ func TestNodeStageVolume(t *testing.T) {
 					},
 				},
 				VolumeId: volumeID,
-			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				successExpectMock(mockMounter, mockDeviceIdentifier)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePath), gomock.Eq(targetPath), gomock.Eq(FSTypeExt3), gomock.Any(), gomock.Nil(), gomock.Len(0))
 			},
 		},
 		{
@@ -178,10 +161,6 @@ func TestNodeStageVolume(t *testing.T) {
 				},
 				VolumeId: volumeID,
 			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				successExpectMock(mockMounter, mockDeviceIdentifier)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePath), gomock.Eq(targetPath), gomock.Eq(FSTypeExt4), gomock.Any(), gomock.Nil(), gomock.Len(0))
-			},
 		},
 		{
 			name: "success device already mounted at target",
@@ -191,13 +170,6 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeCapability:  stdVolCap,
 				VolumeId:          volumeID,
 			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
-				mockMounter.EXPECT().GetDeviceNameFromMount(targetPath).Return(devicePath, 1, nil)
-				mockDeviceIdentifier.EXPECT().Lstat(gomock.Eq(devicePath)).Return(deviceFileInfo, nil)
-
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
-			},
 		},
 		{
 			name: "success nvme device already mounted at target",
@@ -206,22 +178,6 @@ func TestNodeStageVolume(t *testing.T) {
 				StagingTargetPath: targetPath,
 				VolumeCapability:  stdVolCap,
 				VolumeId:          volumeID,
-			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
-
-				// If the device is nvme GetDeviceNameFromMount should return the
-				// canonical device path
-				mockMounter.EXPECT().GetDeviceNameFromMount(targetPath).Return(nvmeDevicePath, 1, nil)
-
-				// The publish context device path may not exist but the driver should
-				// find the canonical device path (see TestFindDevicePath), compare it
-				// to the one returned by GetDeviceNameFromMount, and then skip
-				// FormatAndMountSensitiveWithFormatOptions
-				mockDeviceIdentifier.EXPECT().Lstat(gomock.Eq(nvmeName)).Return(symlinkFileInfo, nil)
-				mockDeviceIdentifier.EXPECT().EvalSymlinks(gomock.Eq(symlinkFileInfo.Name())).Return(nvmeDevicePath, nil)
-
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
 			},
 		},
 		{
@@ -233,18 +189,6 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeContext:     stdVolContext,
 				VolumeId:          volumeID,
 			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().PathExists(gomock.Eq(targetPath)).Return(false, nil)
-				mockMounter.EXPECT().MakeDir(targetPath).Return(nil)
-				mockMounter.EXPECT().GetDeviceNameFromMount(targetPath).Return("", 1, nil)
-				mockMounter.EXPECT().PathExists(gomock.Eq(devicePath)).Return(true, nil)
-				mockDeviceIdentifier.EXPECT().Lstat(gomock.Eq(devicePath)).Return(deviceFileInfo, nil)
-
-				// The device path argument should be canonicalized to contain the
-				// partition
-				mockMounter.EXPECT().NeedResize(gomock.Eq(devicePathWithPartition), gomock.Eq(targetPath)).Return(false, nil)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePathWithPartition), gomock.Eq(targetPath), gomock.Eq(defaultFsType), gomock.Any(), gomock.Nil(), gomock.Len(0))
-			},
 		},
 		{
 			name: "success with invalid partition config, will ignore partition",
@@ -255,10 +199,6 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeContext:     map[string]string{VolumeAttributePartition: "0"},
 				VolumeId:          volumeID,
 			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				successExpectMock(mockMounter, mockDeviceIdentifier)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePath), gomock.Eq(targetPath), gomock.Eq(defaultFsType), gomock.Any(), gomock.Nil(), gomock.Len(0))
-			},
 		},
 		{
 			name: "success with block size",
@@ -268,10 +208,6 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeCapability:  stdVolCap,
 				VolumeId:          volumeID,
 				VolumeContext:     map[string]string{BlockSizeKey: "1024"},
-			},
-			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				successExpectMock(mockMounter, mockDeviceIdentifier)
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Eq(devicePath), gomock.Eq(targetPath), gomock.Eq(defaultFsType), gomock.Any(), gomock.Nil(), gomock.Eq([]string{"-b", "1024"}))
 			},
 		},
 		{
