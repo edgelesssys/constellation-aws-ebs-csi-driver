@@ -112,7 +112,8 @@ func TestNodeStageVolume(t *testing.T) {
 				VolumeId: volumeID,
 			},
 			expectMock: func(mockMounter MockMounter, mockDeviceIdentifier MockDeviceIdentifier) {
-				mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
+				// not expected, as block should be no-op on block
+				// mockMounter.EXPECT().FormatAndMountSensitiveWithFormatOptions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Nil(), gomock.Len(0)).Times(0)
 			},
 		},
 		{
