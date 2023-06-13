@@ -154,6 +154,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	fsType := defaultFsType
+	integrity := false
 	var mountOptions []string
 	if mountVolume := volCap.GetMount(); mountVolume != nil {
 		fsType = mountVolume.GetFsType()
