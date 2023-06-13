@@ -18,6 +18,7 @@ package driver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -179,6 +180,15 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		return nil, status.Error(codes.Internal, fmt.Sprintf("NodeStageVolume failed on volume %v to %s, open crypt device failed (%v)", devicePath, target, err))
 	}
 	klog.V(4).Infof("Successfully created LUKS2 device on %s", devicePath)
+	defer func() {
+		if retErr != nil {
+			klog.V(4).Infof("Unmapping device %s due to error after device was mapped", devicePath)
+			if err := d.driverOptions.cm.CloseCryptDevice(volumeID); err != nil {
+				klog.Errorf("Failed to unmap %s: %v", volumeID, err)
+				retErr = errors.Join(retErr, err)
+			}
+		}
+	}()
 
 	// [Edgeless] 4: No-Op for block devices
 	if blk := volCap.GetBlock(); blk != nil {
