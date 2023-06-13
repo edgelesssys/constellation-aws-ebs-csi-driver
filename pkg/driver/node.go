@@ -161,6 +161,12 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 			fsType = defaultFsType
 		}
 
+		// [Edgeless] 2.5: Check if integrity is requested
+		fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
+		if integrity {
+			klog.V(4).Infof("Integrity protected FS requested. Preparing to wipe device.")
+		}
+
 		_, ok = ValidFSTypes[strings.ToLower(fsType)]
 		if !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "NodeStageVolume: invalid fstype %s", fsType)
@@ -170,10 +176,6 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	// [Edgeless] 3: Map the device as a crypt device
-	fsType, integrity := cryptmapper.IsIntegrityFS(fsType)
-	if integrity {
-		klog.V(4).Infof("Integrity protected FS requested. Preparing to wipe device.")
-	}
 	klog.V(4).Infof("Creating LUKS2 device on %s", source)
 	devicePath, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, integrity)
 	if err != nil {
