@@ -95,7 +95,7 @@ func newNodeService(driverOptions *DriverOptions) nodeService {
 	}
 }
 
-func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (res *csi.NodeStageVolumeResponse, retErr error) {
 	klog.V(4).InfoS("NodeStageVolume: called", "args", *req)
 
 	volumeID := req.GetVolumeId()
@@ -230,7 +230,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	// FormatAndMount will format only if needed
-	klog.V(4).InfoS("NodeStageVolume: formatting and mounting with fstype", "source", source, "volumeID", volumeID, "target", target, "fstype", fsType)
+	klog.V(4).InfoS("NodeStageVolume: formatting and mounting with fstype", "devicePath", devicePath, "volumeID", volumeID, "target", target, "fstype", fsType)
 	formatOptions := []string{}
 	if len(blockSize) > 0 {
 		if fsType == FSTypeXfs {
@@ -238,15 +238,15 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		}
 		formatOptions = append(formatOptions, "-b", blockSize)
 	}
-	err = d.mounter.FormatAndMountSensitiveWithFormatOptions(source, target, fsType, mountOptions, nil, formatOptions)
+	err = d.mounter.FormatAndMountSensitiveWithFormatOptions(devicePath, target, fsType, mountOptions, nil, formatOptions)
 	if err != nil {
-		msg := fmt.Sprintf("could not format %q and mount it at %q: %v", source, target, err)
+		msg := fmt.Sprintf("could not format %q and mount it at %q: %v", devicePath, target, err)
 		return nil, status.Error(codes.Internal, msg)
 	}
 
-	needResize, err := d.mounter.NeedResize(source, target)
+	needResize, err := d.mounter.NeedResize(devicePath, target)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Could not determine if volume %q (%q) need to be resized:  %v", req.GetVolumeId(), source, err)
+		return nil, status.Errorf(codes.Internal, "Could not determine if volume %q (%q) need to be resized:  %v", req.GetVolumeId(), devicePath, err)
 	}
 
 	if needResize {
@@ -254,12 +254,12 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Error attempting to create new ResizeFs:  %v", err)
 		}
-		klog.V(2).InfoS("Volume needs resizing", "source", source)
-		if _, err := r.Resize(source, target); err != nil {
-			return nil, status.Errorf(codes.Internal, "Could not resize volume %q (%q):  %v", volumeID, source, err)
+		klog.V(2).InfoS("Volume needs resizing", "devicePath", devicePath)
+		if _, err := r.Resize(devicePath, target); err != nil {
+			return nil, status.Errorf(codes.Internal, "Could not resize volume %q (%q):  %v", volumeID, devicePath, err)
 		}
 	}
-	klog.V(4).InfoS("NodeStageVolume: successfully formatted and mounted volume", "source", source, "volumeID", volumeID, "target", target, "fstype", fsType)
+	klog.V(4).InfoS("NodeStageVolume: successfully formatted and mounted volume", "devicePath", devicePath, "volumeID", volumeID, "target", target, "fstype", fsType)
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
