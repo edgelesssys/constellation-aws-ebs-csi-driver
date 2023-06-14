@@ -310,6 +310,12 @@ func (d *nodeService) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 	// reply 0 OK.
 	if refCount == 0 {
 		klog.V(5).InfoS("[Debug] NodeUnstageVolume: target not mounted", "target", target)
+
+		// [Edgeless] Unmap and remove crypt device from node
+		if err := d.driverOptions.cm.CloseCryptDevice(volumeID); err != nil {
+			return nil, status.Errorf(codes.Internal, "NodeUnstageVolume: failed to close mapped crypt device for disk %s (%v)", target, err)
+		}
+
 		return &csi.NodeUnstageVolumeResponse{}, nil
 	}
 
