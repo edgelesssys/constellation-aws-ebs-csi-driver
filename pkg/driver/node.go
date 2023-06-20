@@ -369,7 +369,7 @@ func (d *nodeService) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandV
 		// [Edgeless] Resize crypt device
 		devicePath, err = d.driverOptions.cm.ResizeCryptDevice(ctx, volumeID)
 		if err != nil {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("resizing crypt device: %s", err))
+			return nil, status.Errorf(codes.Internal, "resizing crypt device: %s", err)
 		}
 
 		if blk := volumeCapability.GetBlock(); blk != nil {
