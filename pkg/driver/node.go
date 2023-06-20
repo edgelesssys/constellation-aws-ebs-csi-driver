@@ -187,7 +187,6 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 			klog.V(4).Infof("Unmapping device %s due to error after device was mapped: %v", devicePath, retErr)
 			if err := d.driverOptions.cm.CloseCryptDevice(volumeID); err != nil {
 				klog.Errorf("Failed to unmap %s: %v", volumeID, err)
-				retErr = errors.Join(retErr, err)
 			}
 		}
 	}()
