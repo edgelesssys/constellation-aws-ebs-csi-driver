@@ -15,7 +15,7 @@
 # See
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 # for info on BUILDPLATFORM, TARGETOS, TARGETARCH, etc.
-FROM --platform=$BUILDPLATFORM golang:1.20 AS builder
+FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS builder
 WORKDIR /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver
 COPY go.* .
 ARG GOPROXY
@@ -25,7 +25,11 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG VERSION
 
-RUN apt-get update && apt-get install -y libcryptsetup-dev
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
+RUN wget https://golang.org/dl/go1.20.5.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
+RUN apt-get update && apt-get install -y libcryptsetup-dev build-essential
 
 RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
 
