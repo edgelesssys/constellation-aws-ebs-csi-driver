@@ -179,7 +179,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	klog.V(4).Infof("Creating LUKS2 device on %s", source)
 	devicePath, err = d.driverOptions.cm.OpenCryptDevice(ctx, source, volumeID, integrity)
 	if err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("NodeStageVolume failed on volume %v to %s, open crypt device failed (%v)", devicePath, target, err))
+		return nil, status.Errorf(codes.Internal, "NodeStageVolume failed on volume %s to %s, open crypt device failed: %v", devicePath, target, err)
 	}
 	klog.V(4).Infof("Successfully created LUKS2 device on %s", devicePath)
 	defer func() {
