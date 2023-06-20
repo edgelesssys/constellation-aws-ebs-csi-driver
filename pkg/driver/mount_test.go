@@ -31,7 +31,8 @@ import (
 )
 
 func TestGetFileSystemSize(t *testing.T) {
-	cmdOutputSuccessXfs := `
+	cmdOutputSuccessXfs :=
+		`
 	statfs.f_bsize = 4096
 	statfs.f_blocks = 1832448
 	statfs.f_bavail = 1822366
@@ -52,7 +53,8 @@ func TestGetFileSystemSize(t *testing.T) {
 	counts.freeino = 61
 	counts.allocino = 64
 `
-	cmdOutputNoDataXfs := `
+	cmdOutputNoDataXfs :=
+		`
 	statfs.f_bsize = 4096
 	statfs.f_blocks = 1832448
 	statfs.f_bavail = 1822366
@@ -71,7 +73,8 @@ func TestGetFileSystemSize(t *testing.T) {
 	counts.freeino = 61
 	counts.allocino = 64
 `
-	cmdOutputSuccessExt4 := `
+	cmdOutputSuccessExt4 :=
+		`
 Filesystem volume name:   cloudimg-rootfs
 Last mounted on:          /
 Filesystem UUID:          testUUID
@@ -121,7 +124,8 @@ Journal start:            1
 Journal checksum type:    crc32c
 Journal checksum:         0xb7df3c6e
 `
-	cmdOutputNoDataExt4 := `Filesystem volume name:   cloudimg-rootfs
+	cmdOutputNoDataExt4 :=
+		`Filesystem volume name:   cloudimg-rootfs
 Last mounted on:          /
 Filesystem UUID:          testUUID
 Filesystem magic number:  0xEF53
@@ -364,6 +368,7 @@ func TestMakeFile(t *testing.T) {
 	if exists, err := mountObj.PathExists(targetPath); !exists {
 		t.Fatalf("Expect no error but got: %v", err)
 	}
+
 }
 
 func TestPathExists(t *testing.T) {
@@ -382,6 +387,7 @@ func TestPathExists(t *testing.T) {
 	}
 
 	exists, err := mountObj.PathExists(targetPath)
+
 	if err != nil {
 		t.Fatalf("Expect no error but got: %v", err)
 	}
@@ -389,6 +395,7 @@ func TestPathExists(t *testing.T) {
 	if exists {
 		t.Fatalf("Expected file %s to not exist", targetPath)
 	}
+
 }
 
 func TestGetDeviceName(t *testing.T) {
@@ -409,4 +416,5 @@ func TestGetDeviceName(t *testing.T) {
 	if _, _, err := mountObj.GetDeviceNameFromMount(targetPath); err != nil {
 		t.Fatalf("Expect no error but got: %v", err)
 	}
+
 }

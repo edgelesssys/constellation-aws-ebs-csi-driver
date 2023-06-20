@@ -5,10 +5,9 @@ package resizefs
 
 import (
 	"errors"
-	"testing"
-
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/mounter"
+	"testing"
 )
 
 func TestResize(t *testing.T) {

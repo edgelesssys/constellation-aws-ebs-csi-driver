@@ -33,6 +33,7 @@ type PreProvisionedVolumeSnapshotTest struct {
 }
 
 func (t *PreProvisionedVolumeSnapshotTest) Run(client clientset.Interface, restclient k8srestclient.Interface, namespace *v1.Namespace, snapshotId string) {
+
 	By("taking snapshots")
 	tvsc, cleanup := CreateVolumeSnapshotClass(restclient, namespace, t.CSIDriver)
 	defer cleanup()

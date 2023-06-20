@@ -45,7 +45,9 @@ const (
 	dummySnapshotName = "pre-provisioned-snapshot"
 )
 
-var defaultDiskSizeBytes int64 = defaultDiskSize * 1024 * 1024 * 1024
+var (
+	defaultDiskSizeBytes int64 = defaultDiskSize * 1024 * 1024 * 1024
+)
 
 // Requires env AWS_AVAILABILITY_ZONES a comma separated list of AZs to be set
 var _ = Describe("[ebs-csi-e2e] [single-az] Pre-Provisioned", func() {

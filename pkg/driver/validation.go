@@ -37,8 +37,10 @@ func ValidateDriverOptions(options *DriverOptions) error {
 	return nil
 }
 
-/// https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html
-var awsTagValidRegex = regexp.MustCompile(`[a-zA-Z0-9_.:=+\-@]*`)
+var (
+	/// https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html
+	awsTagValidRegex = regexp.MustCompile(`[a-zA-Z0-9_.:=+\-@]*`)
+)
 
 func validateExtraTags(tags map[string]string, warnOnly bool) error {
 	if len(tags) > cloud.MaxNumTagsPerResource {

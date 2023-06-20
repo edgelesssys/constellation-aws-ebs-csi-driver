@@ -81,7 +81,7 @@ func TestSanity(t *testing.T) {
 }
 
 func createDir(targetPath string) (string, error) {
-	if err := os.MkdirAll(targetPath, 0o300); err != nil {
+	if err := os.MkdirAll(targetPath, 0300); err != nil {
 		if os.IsNotExist(err) {
 			return "", err
 		}
@@ -124,7 +124,7 @@ func (c *fakeCloudProvider) CreateDisk(ctx context.Context, volumeName string, d
 		}
 	}
 	if existingDisk, ok := c.disks[volumeName]; ok {
-		// Already Created volume
+		//Already Created volume
 		if existingDisk.Disk.CapacityGiB != util.BytesToGiB(diskOptions.CapacityBytes) {
 			return nil, cloud.ErrIdempotentParameterMismatch
 		} else {
@@ -223,11 +223,13 @@ func (c *fakeCloudProvider) CreateSnapshot(ctx context.Context, volumeID string,
 	}
 	c.snapshots[snapshotID] = s
 	return s.Snapshot, nil
+
 }
 
 func (c *fakeCloudProvider) DeleteSnapshot(ctx context.Context, snapshotID string) (success bool, err error) {
 	delete(c.snapshots, snapshotID)
 	return true, nil
+
 }
 
 func (c *fakeCloudProvider) GetSnapshotByName(ctx context.Context, name string) (snapshot *cloud.Snapshot, err error) {
@@ -283,6 +285,7 @@ func (c *fakeCloudProvider) ListSnapshots(ctx context.Context, volumeID string, 
 		Snapshots: snapshots,
 		NextToken: retToken,
 	}, nil
+
 }
 
 func (c *fakeCloudProvider) EnableFastSnapshotRestores(ctx context.Context, availabilityZones []string, snapshotID string) (*ec2.EnableFastSnapshotRestoresOutput, error) {
@@ -368,7 +371,7 @@ func (f *fakeMounter) GetDeviceNameFromMount(mountPath string) (string, int, err
 }
 
 func (f *fakeMounter) MakeFile(pathname string) error {
-	file, err := os.OpenFile(pathname, os.O_CREATE, os.FileMode(0o644))
+	file, err := os.OpenFile(pathname, os.O_CREATE, os.FileMode(0644))
 	if err != nil {
 		if !os.IsExist(err) {
 			return err
@@ -381,7 +384,7 @@ func (f *fakeMounter) MakeFile(pathname string) error {
 }
 
 func (f *fakeMounter) MakeDir(pathname string) error {
-	err := os.MkdirAll(pathname, os.FileMode(0o755))
+	err := os.MkdirAll(pathname, os.FileMode(0755))
 	if err != nil {
 		if !os.IsExist(err) {
 			return err

@@ -20,9 +20,8 @@ limitations under the License.
 package mounter
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestNewSafeMounter(t *testing.T) {
