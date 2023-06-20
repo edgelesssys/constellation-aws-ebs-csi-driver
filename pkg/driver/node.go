@@ -144,8 +144,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	// [Edgeless] 2: check if device was already mounted before
 	device, _, err := d.mounter.GetDeviceNameFromMount(target)
 	if err != nil {
-		msg := fmt.Sprintf("failed to check if volume is already mounted: %v", err)
-		return nil, status.Error(codes.Internal, msg)
+		return nil, status.Errorf(codes.Internal, "failed to check if volume is already mounted: %v", err)
 	}
 	klog.V(4).InfoS("NodeStageVolume: checking if volume is already staged", "device", device, "source", source, "target", target)
 	if device == source {
