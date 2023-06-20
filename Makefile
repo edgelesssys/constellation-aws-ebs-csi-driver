@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION?=v1.18.0
+VERSION?=v1.0.0
 
 PKG=github.com/kubernetes-sigs/aws-ebs-csi-driver
 GIT_COMMIT?=$(shell git rev-parse HEAD)
@@ -27,7 +27,7 @@ GOBIN=$(shell pwd)/bin
 
 REGISTRY?=ghcr.io/edgelesssys/constellation
 IMAGE?=$(REGISTRY)/aws-csi-driver
-DRIVERVERSION=$(DRIVER_VERSION)
+DRIVERVERSION=$(VERSION)
 TAG?=$(GIT_COMMIT)
 
 OUTPUT_TYPE?=docker

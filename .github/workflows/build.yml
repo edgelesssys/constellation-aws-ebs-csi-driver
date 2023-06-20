@@ -24,7 +24,6 @@ jobs:
 
       - name: Build container image
         run: |
-          export DRIVER_VERSION=${{ inputs.versionTag }}
           make image
 
       - name: Log in to the Container registry
