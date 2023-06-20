@@ -24,17 +24,10 @@ jobs:
         with:
           go-version: "1.18"
 
-      - name: Pseudo version
-        id: pseudo-version
-        run: |
-          mkdir constellation
-          cd constellation
-          git clone https://github.com/edgelesssys/constellation .
-          echo "DRIVER_VERSION=${{ inputs.versionTag }}" >> $GITHUB_ENV
-
-
       - name: Build container image
-        run: make image
+        run: |
+          export DRIVER_VERSION=${{ inputs.versionTag }}
+          make image
 
       - name: Log in to the Container registry
         id: docker-login
