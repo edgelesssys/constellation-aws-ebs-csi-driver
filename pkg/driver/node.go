@@ -18,7 +18,6 @@ package driver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -393,6 +392,12 @@ func (d *nodeService) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandV
 			// [Edgeless] Reduce capacity by LUKS header size
 			// https://gitlab.com/cryptsetup/LUKS2-docs/blob/main/luks2_doc_wip.pdf
 			bcap = bcap - cryptmapper.LUKSHeaderSize
+
+			// [Edgeless] Resize crypt device
+			devicePath, err = d.driverOptions.cm.ResizeCryptDevice(ctx, volumeID)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "resizing crypt device: %s", err)
+			}
 
 			klog.V(4).InfoS("NodeExpandVolume: called, since given volumePath is a block device, ignoring...", "volumeID", volumeID, "volumePath", volumePath)
 			return &csi.NodeExpandVolumeResponse{CapacityBytes: bcap}, nil
