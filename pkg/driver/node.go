@@ -133,7 +133,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 		if part != "0" {
 			partition = part
 		} else {
-			klog.InfoS("NodeStageVolume: invalid partition config, will ignore.", "partition", part)
+			klog.V(4).InfoS("NodeStageVolume: invalid partition config, will ignore.", "partition", part)
 		}
 	}
 	source, err := d.findDevicePath(devicePath, volumeID, partition)
