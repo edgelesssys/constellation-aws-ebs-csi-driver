@@ -24,6 +24,12 @@ jobs:
         with:
           go-version: "1.20"
 
+      - name: Check out Constellation repository
+        run: |
+          mkdir constellation
+          cd constellation
+          git clone https://github.com/edgelesssys/constellation .
+
       - name: Build container image
         run: |
           export DRIVER_VERSION=${{ inputs.versionTag }}
