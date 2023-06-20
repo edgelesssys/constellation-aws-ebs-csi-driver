@@ -194,7 +194,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 
 	// [Edgeless] 4: No-Op for block devices
 	if blk := volCap.GetBlock(); blk != nil {
-		klog.V(4).Infof("NodeStageVolume succeeded on %v to %s, capability is block so this is a no-op", volumeID, target)
+		klog.V(4).Infof("NodeStageVolume succeeded on %s to %s, capability is block so this is a no-op", volumeID, target)
 		return &csi.NodeStageVolumeResponse{}, nil
 	}
 
