@@ -17,11 +17,10 @@
 # for info on BUILDPLATFORM, TARGETOS, TARGETARCH, etc.
 FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS builder
 
-RUN curl -LO https://golang.org/dl/go1.20.5.linux-amd64.tar.gz
+RUN apt-get update && apt-get install -y wget libcryptsetup-dev build-essential tar
+RUN wget https://golang.org/dl/go1.20.5.linux-amd64.tar.gz
 RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
-
-RUN apt-get update && apt-get install -y libcryptsetup-dev build-essential
 
 WORKDIR /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver
 COPY go.* .
