@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +38,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/edgelesssys/constellation/v2/csi/cryptmapper"
+	cryptKms "github.com/edgelesssys/constellation/v2/csi/kms"
 	flag "github.com/spf13/pflag"
 
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/driver"
@@ -60,6 +80,11 @@ func main() {
 		r := metrics.InitializeRecorder()
 		r.InitializeMetricsHandler(options.ServerOptions.HttpEndpoint, "/metrics")
 	}
+	// Initialize CryptMapper
+	cm := cryptmapper.New(
+		cryptKms.NewConstellationKMS(options.KMSOptions.Addr),
+		&cryptmapper.CryptDevice{},
+	)
 
 	drv, err := driver.NewDriver(
 		driver.WithEndpoint(options.ServerOptions.Endpoint),
@@ -73,6 +98,7 @@ func main() {
 		driver.WithUserAgentExtra(options.ControllerOptions.UserAgentExtra),
 		driver.WithOtelTracing(options.ServerOptions.EnableOtelTracing),
 		driver.WithBatching(options.ControllerOptions.Batching),
+		driver.WithCryptMapper(cm),
 	)
 	if err != nil {
 		klog.ErrorS(err, "failed to create driver")

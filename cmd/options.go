@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,6 +63,7 @@ type Options struct {
 	*options.ServerOptions
 	*options.ControllerOptions
 	*options.NodeOptions
+	*options.KMSOptions
 }
 
 // used for testing
@@ -65,9 +84,11 @@ func GetOptions(fs *flag.FlagSet) *Options {
 		serverOptions     = options.ServerOptions{}
 		controllerOptions = options.ControllerOptions{}
 		nodeOptions       = options.NodeOptions{}
+		kmsOptions        = options.KMSOptions{}
 	)
 
 	serverOptions.AddFlags(fs)
+	kmsOptions.AddFlags(fs)
 
 	c := logsapi.NewLoggingConfiguration()
 
@@ -150,5 +171,6 @@ func GetOptions(fs *flag.FlagSet) *Options {
 		ServerOptions:     &serverOptions,
 		ControllerOptions: &controllerOptions,
 		NodeOptions:       &nodeOptions,
+		KMSOptions:        &kmsOptions,
 	}
 }
