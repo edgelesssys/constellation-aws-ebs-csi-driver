@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2024 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,9 +41,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubernetes-sigs/aws-ebs-csi-driver/cmd/hooks"
-	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/cloud"
-	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/cloud/metadata"
+	"github.com/edgelesssys/constellation/v2/csi/cryptmapper"
+	cryptKms "github.com/edgelesssys/constellation/v2/csi/kms"
+	flag "github.com/spf13/pflag"
+
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/driver"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/metrics"
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/mounter"
@@ -137,6 +156,11 @@ func main() {
 		r := metrics.InitializeRecorder()
 		r.InitializeMetricsHandler(options.HttpEndpoint, "/metrics", options.MetricsCertFile, options.MetricsKeyFile)
 	}
+	// Initialize CryptMapper
+	cm := cryptmapper.New(
+		cryptKms.NewConstellationKMS(options.KMSOptions.Addr),
+		&cryptmapper.CryptDevice{},
+	)
 
 	cfg := metadata.MetadataServiceConfig{
 		EC2MetadataClient: metadata.DefaultEC2MetadataClient,
@@ -184,7 +208,7 @@ func main() {
 		klog.V(2).InfoS("Failed to setup k8s client", "err", err)
 	}
 
-	drv, err := driver.NewDriver(cloud, &options, m, md, k8sClient)
+	drv, err := driver.NewDriver(cloud, &options, m, md, k8sClient, cm)
 	if err != nil {
 		klog.ErrorS(err, "failed to create driver")
 		klog.FlushAndExit(klog.ExitFlushTimeout, 1)

@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -408,6 +426,42 @@ func TestCreateVolume(t *testing.T) {
 			},
 		},
 		{
+			name: "fail volume too small",
+			testFunc: func(t *testing.T) {
+				req := &csi.CreateVolumeRequest{
+					Name:               "vol-test",
+					CapacityRange:      &csi.CapacityRange{RequiredBytes: 10},
+					VolumeCapabilities: stdVolCap,
+					Parameters:         stdParams,
+				}
+
+				ctx := context.Background()
+
+				mockCtl := gomock.NewController(t)
+				defer mockCtl.Finish()
+
+				mockCloud := cloud.NewMockCloud(mockCtl)
+
+				awsDriver := controllerService{
+					cloud:         mockCloud,
+					inFlight:      internal.NewInFlight(),
+					driverOptions: &DriverOptions{},
+				}
+
+				if _, err := awsDriver.CreateVolume(ctx, req); err != nil {
+					srvErr, ok := status.FromError(err)
+					if !ok {
+						t.Fatalf("Could not get error status code from error: %v", srvErr)
+					}
+					if srvErr.Code() != codes.InvalidArgument {
+						t.Fatalf("Expected error code %d, got %d message %s", codes.InvalidArgument, srvErr.Code(), srvErr.Message())
+					}
+				} else {
+					t.Fatalf("Expected error %v, got no error", codes.InvalidArgument)
+				}
+			},
+		},
+		{
 			name: "success same name and same capacity",
 			testFunc: func(t *testing.T) {
 				req := &csi.CreateVolumeRequest{
@@ -505,7 +559,7 @@ func TestCreateVolume(t *testing.T) {
 				}
 				extraReq := &csi.CreateVolumeRequest{
 					Name:               "test-vol",
-					CapacityRange:      &csi.CapacityRange{RequiredBytes: 10000},
+					CapacityRange:      &csi.CapacityRange{RequiredBytes: 9 * 1024 * 1024 * 1024},
 					VolumeCapabilities: stdVolCap,
 					Parameters:         stdParams,
 				}
@@ -2835,7 +2889,8 @@ func TestCreateSnapshot(t *testing.T) {
 								AvailabilityZone: aws.String("us-west-1a,us-east-1f"),
 								Error: &types.EnableFastSnapshotRestoreStateError{
 									Message: aws.String("failed to create fast snapshot restore"),
-								}},
+								},
+							},
 						},
 					}},
 				}
@@ -2882,7 +2937,8 @@ func TestCreateSnapshot(t *testing.T) {
 				mockCloud := cloud.NewMockCloud(mockCtl)
 				mockCloud.EXPECT().GetSnapshotByName(gomock.Eq(ctx), gomock.Eq(req.GetName())).Return(nil, cloud.ErrNotFound).AnyTimes()
 				mockCloud.EXPECT().AvailabilityZones(gomock.Eq(ctx)).Return(map[string]struct{}{
-					"us-east-1a": {}, "us-east-1b": {}}, nil).AnyTimes()
+					"us-east-1a": {}, "us-east-1b": {},
+				}, nil).AnyTimes()
 
 				awsDriver := ControllerService{
 					cloud:    mockCloud,

@@ -1,6 +1,18 @@
+# AWS PVC CSI Driver for [Constellation](https://github.com/edgelesssys/constellation)
+
+This is a fork of the [AWS CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver), extending it by disk encryption features.
+
+## How to Build
+
+```bash
+gh workflow run build.yml --ref <branch> -F versionTag=v<version>
+```
+
+## License
+
+This project is licensed under the [AGPLv3](LICENSE). It's based on code licensed under the [Apache 2.0 license](LICENSE.Apache).
+
 # Amazon Elastic Block Store (EBS) CSI driver
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/kubernetes-sigs/aws-ebs-csi-driver)](https://github.com/kubernetes-sigs/aws-ebs-csi-driver/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-sigs/aws-ebs-csi-driver)](https://goreportcard.com/report/github.com/kubernetes-sigs/aws-ebs-csi-driver)
 
 ## Overview
 

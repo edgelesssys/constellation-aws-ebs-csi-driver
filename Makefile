@@ -1,3 +1,21 @@
+# Copyright (c) Edgeless Systems GmbH
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# This file incorporates work covered by the following copyright and
+# permission notice:
+#
+#
 # Copyright 2023 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +30,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-###
-### This Makefile is documented in docs/makefile.md
-###
-
-## Variables/Functions
-
-VERSION?=v1.30.0
+VERSION?=v1.0.0
 
 PKG=github.com/kubernetes-sigs/aws-ebs-csi-driver
 GIT_COMMIT?=$(shell git rev-parse HEAD)
@@ -37,18 +49,22 @@ endif
 
 GO_SOURCES=go.mod go.sum $(shell find pkg cmd -type f -name "*.go")
 
-REGISTRY?=gcr.io/k8s-staging-provider-aws
-IMAGE?=$(REGISTRY)/aws-ebs-csi-driver
+REGISTRY?=ghcr.io/edgelesssys/constellation
+IMAGE?=$(REGISTRY)/aws-csi-driver
+DRIVERVERSION=$(VERSION)
 TAG?=$(GIT_COMMIT)
 
-ALL_OS?=linux windows
+OUTPUT_TYPE?=docker
+
+OS?=linux
+ARCH?=amd64
+OSVERSION?=al2023
+
+ALL_OS?=linux
 ALL_ARCH_linux?=amd64 arm64
 ALL_OSVERSION_linux?=al2023
 ALL_OS_ARCH_OSVERSION_linux=$(foreach arch, $(ALL_ARCH_linux), $(foreach osversion, ${ALL_OSVERSION_linux}, linux-$(arch)-${osversion}))
 
-ALL_ARCH_windows?=amd64
-ALL_OSVERSION_windows?=ltsc2019 ltsc2022
-ALL_OS_ARCH_OSVERSION_windows=$(foreach arch, $(ALL_ARCH_windows), $(foreach osversion, ${ALL_OSVERSION_windows}, windows-$(arch)-${osversion}))
 ALL_OS_ARCH_OSVERSION=$(foreach os, $(ALL_OS), ${ALL_OS_ARCH_OSVERSION_${os}})
 
 CLUSTER_NAME?=ebs-csi-e2e.k8s.local
@@ -59,13 +75,11 @@ word-hyphen = $(word $2,$(subst -, ,$1))
 
 .EXPORT_ALL_VARIABLES:
 
-## Default target
-# When no target is supplied, make runs the first target that does not begin with a .
-# Alias that to building the binary
-.PHONY: default
-default: bin/$(BINARY)
+.PHONY: linux/$(ARCH) bin/aws-ebs-csi-driver
+linux/$(ARCH): bin/aws-ebs-csi-driver
+bin/aws-ebs-csi-driver: | bin
+	CGO_ENABLED=1 GOOS=linux GOARCH=$(ARCH) go build -mod=mod -ldflags ${LDFLAGS} -o bin/aws-ebs-csi-driver ./cmd/
 
-## Top level targets
 
 .PHONY: clean
 clean:
@@ -83,7 +97,7 @@ test/coverage:
 	rm cover.out filtered_cover.out
 
 # TODO: Re-enable sanity tests
-# sanity tests have been disabled with the removal of NewFakeDriver, which was previously created to instantiate a fake driver utilized for testing. 
+# sanity tests have been disabled with the removal of NewFakeDriver, which was previously created to instantiate a fake driver utilized for testing.
 # to re-enable tests, implement sanity tests creating a new driver instance by injecting mocked dependencies.
 #.PHONY: test-sanity
 #test-sanity:
@@ -100,6 +114,7 @@ update: update/gofmt update/kustomize update/mockgen update/gomod update/shfmt
 verify: verify/govet verify/golangci-lint verify/update
 	@echo "All verifications passed!"
 
+# Builds all linux images and pushes them
 .PHONY: all-push
 all-push: all-image-registry push-manifest
 

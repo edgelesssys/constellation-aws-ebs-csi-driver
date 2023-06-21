@@ -3,15 +3,20 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver
+  repository: ghcr.io/edgelesssys/constellation/aws-csi-driver
   # Overrides the image tag whose default is v{{ .Chart.AppVersion }}
-  tag: ""
-  pullPolicy: IfNotPresent
+  tag: "v1.0.0@sha256:e41e5b32f7cf78cfec37ec5c2dc05616a55362e765ee56f12807b9ec6d81415b"
+  pullPolicy: Always
 
 # -- Custom labels to add into metadata
 customLabels:
   {}
   # k8s-app: aws-ebs-csi-driver
+
+kms:
+  keyServiceName: "key-service"
+  keyServicePort: 9000
+  keyServiceNamespace: "kube-system"
 
 sidecars:
   provisioner:
@@ -185,24 +190,24 @@ controller:
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 1
-        preference:
-          matchExpressions:
-          - key: eks.amazonaws.com/compute-type
-            operator: NotIn
-            values:
-            - fargate
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                  - fargate
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app
-              operator: In
-              values:
-              - ebs-csi-controller
-          topologyKey: kubernetes.io/hostname
-        weight: 100
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - ebs-csi-controller
+            topologyKey: kubernetes.io/hostname
+          weight: 100
   # The default filesystem type of the volume to provision when fstype is unspecified in the StorageClass.
   # If the default is not set and fstype is unset in the StorageClass, then no fstype will be set
   defaultFsType: ext4
@@ -266,7 +271,7 @@ controller:
     limits:
       memory: 256Mi
   serviceAccount:
-  # A service account will be created for you if set to true. Set to false if you want to use your own.
+    # A service account will be created for you if set to true. Set to false if you want to use your own.
     create: true
     name: ebs-csi-controller-sa
     annotations: {}
@@ -360,9 +365,9 @@ node:
   podLabels: {}
   tolerateAllTaints: true
   tolerations:
-  - operator: Exists
-    effect: NoExecute
-    tolerationSeconds: 300
+    - operator: Exists
+      effect: NoExecute
+      tolerationSeconds: 300
   resources:
     requests:
       cpu: 10m

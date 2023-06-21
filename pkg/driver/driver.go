@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +64,7 @@ const (
 )
 
 const (
-	DriverName               = "ebs.csi.aws.com"
+	DriverName               = "aws.csi.confidential.cloud"
 	AwsPartitionKey          = "topology." + DriverName + "/partition"
 	AwsAccountIDKey          = "topology." + DriverName + "/account-id"
 	AwsRegionKey             = "topology." + DriverName + "/region"
@@ -55,7 +73,18 @@ const (
 	// DEPRECATED Use the WellKnownZoneTopologyKey instead
 	ZoneTopologyKey = "topology." + DriverName + "/zone"
 	OSTopologyKey   = "kubernetes.io/os"
+
+	WellKnownTopologyKey = "topology.kubernetes.io/zone"
+	// DEPRECATED Use the WellKnownTopologyKey instead
+	TopologyKey = "topology." + DriverName + "/zone"
 )
+
+type cryptMapper interface {
+	CloseCryptDevice(volumeID string) error
+	OpenCryptDevice(ctx context.Context, source, volumeID string, integrity bool) (string, error)
+	ResizeCryptDevice(ctx context.Context, volumeID string) (string, error)
+	GetDevicePath(volumeID string) (string, error)
+}
 
 type Driver struct {
 	controller *ControllerService
@@ -64,7 +93,7 @@ type Driver struct {
 	options    *Options
 }
 
-func NewDriver(c cloud.Cloud, o *Options, m mounter.Mounter, md metadata.MetadataService, k kubernetes.Interface) (*Driver, error) {
+func NewDriver(c cloud.Cloud, o *Options, m mounter.Mounter, md metadata.MetadataService, k kubernetes.Interface, cm cryptMapper) (*Driver, error) {
 	klog.InfoS("Driver Information", "Driver", DriverName, "Version", driverVersion)
 
 	if err := ValidateDriverOptions(o); err != nil {
