@@ -1,3 +1,21 @@
+# Copyright (c) Edgeless Systems GmbH
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# This file incorporates work covered by the following copyright and
+# permission notice:
+#
+#
 # Copyright 2019 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +33,13 @@
 # See
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 # for info on BUILDPLATFORM, TARGETOS, TARGETARCH, etc.
-FROM --platform=$BUILDPLATFORM golang:1.20 AS builder
+FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS builder
+
+RUN apt-get update && apt-get install -y wget libcryptsetup-dev build-essential tar git pkgconf
+RUN wget https://golang.org/dl/go1.20.5.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
 WORKDIR /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver
 COPY go.* .
 ARG GOPROXY
@@ -24,20 +48,14 @@ COPY . .
 ARG TARGETOS
 ARG TARGETARCH
 ARG VERSION
+
 RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
 
-FROM public.ecr.aws/eks-distro-build-tooling/eks-distro-minimal-base-csi-ebs:latest.2 AS linux-amazon
+# Driver image
+FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS linux-amazon
+
+RUN apt-get update && apt-get install -y util-linux e2fsprogs mount ca-certificates udev xfsprogs btrfs-progs libcryptsetup-dev
+
 COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver /bin/aws-ebs-csi-driver
+
 ENTRYPOINT ["/bin/aws-ebs-csi-driver"]
-
-FROM mcr.microsoft.com/windows/servercore:20H2 AS windows-20H2
-COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver.exe /aws-ebs-csi-driver.exe
-ENTRYPOINT ["/aws-ebs-csi-driver.exe"]
-
-FROM mcr.microsoft.com/windows/servercore:ltsc2019 AS windows-ltsc2019
-COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver.exe /aws-ebs-csi-driver.exe
-ENTRYPOINT ["/aws-ebs-csi-driver.exe"]
-
-FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS windows-ltsc2022
-COPY --from=builder /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver/bin/aws-ebs-csi-driver.exe /aws-ebs-csi-driver.exe
-ENTRYPOINT ["/aws-ebs-csi-driver.exe"]

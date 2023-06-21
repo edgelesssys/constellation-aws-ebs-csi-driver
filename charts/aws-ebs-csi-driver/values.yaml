@@ -3,15 +3,20 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: public.ecr.aws/ebs-csi-driver/aws-ebs-csi-driver
+  repository: ghcr.io/edgelesssys/constellation/aws-csi-driver
   # Overrides the image tag whose default is v{{ .Chart.AppVersion }}
-  tag: ""
-  pullPolicy: IfNotPresent
+  tag: "v1.0.0@sha256:e41e5b32f7cf78cfec37ec5c2dc05616a55362e765ee56f12807b9ec6d81415b"
+  pullPolicy: Always
 
 # -- Custom labels to add into metadata
 customLabels:
   {}
   # k8s-app: aws-ebs-csi-driver
+
+kms:
+  keyServiceName: "key-service"
+  keyServicePort: 9000
+  keyServiceNamespace: "kube-system"
 
 sidecars:
   provisioner:
@@ -19,7 +24,7 @@ sidecars:
     image:
       pullPolicy: IfNotPresent
       repository: public.ecr.aws/eks-distro/kubernetes-csi/external-provisioner
-      tag: "v3.4.1-eks-1-26-7"
+      tag: "v3.4.1-eks-1-26-7@sha256:adfcb04433d1824f62dde0365877d0f7b7a2eaebc45670cbab7e0c1f07ba0607"
     logLevel: 2
     resources: {}
     # Tune leader lease election for csi-provisioner.
@@ -40,7 +45,7 @@ sidecars:
     image:
       pullPolicy: IfNotPresent
       repository: public.ecr.aws/eks-distro/kubernetes-csi/external-attacher
-      tag: "v4.2.0-eks-1-26-7"
+      tag: "v4.2.0-eks-1-26-7@sha256:4b0d6e8758a0213ec942381b9577d2b3e971b545dc9e3fb59973f7992763d85f"
     # Tune leader lease election for csi-attacher.
     # Leader election is on by default.
     leaderElection:
@@ -63,7 +68,7 @@ sidecars:
     image:
       pullPolicy: IfNotPresent
       repository: public.ecr.aws/eks-distro/kubernetes-csi/external-snapshotter/csi-snapshotter
-      tag: "v6.2.1-eks-1-26-7"
+      tag: "v6.2.1-eks-1-26-7@sha256:b8071f45885f1838387edb04a1d164680dcec8d656de682624ddc59d30ba660b"
     logLevel: 2
     resources: {}
     securityContext:
@@ -73,7 +78,7 @@ sidecars:
     image:
       pullPolicy: IfNotPresent
       repository: public.ecr.aws/eks-distro/kubernetes-csi/livenessprobe
-      tag: "v2.9.0-eks-1-26-7"
+      tag: "v2.9.0-eks-1-26-7@sha256:d9e11b42ae5f4f2f7ea9034e68040997cdbb04ae9e188aa897f76ae92698d78a"
     resources: {}
     securityContext:
       readOnlyRootFilesystem: true
@@ -83,7 +88,7 @@ sidecars:
     image:
       pullPolicy: IfNotPresent
       repository: public.ecr.aws/eks-distro/kubernetes-csi/external-resizer
-      tag: "v1.7.0-eks-1-26-7"
+      tag: "v1.7.0-eks-1-26-7@sha256:81672f19d1da5cdff8d2068d8d69776067a1e5c31537ab3282d95dff34d581b6"
     logLevel: 2
     resources: {}
     securityContext:
@@ -94,7 +99,7 @@ sidecars:
     image:
       pullPolicy: IfNotPresent
       repository: public.ecr.aws/eks-distro/kubernetes-csi/node-driver-registrar
-      tag: "v2.7.0-eks-1-26-7"
+      tag: "v2.7.0-eks-1-26-7@sha256:6ad0cae2ae91453f283a44e9b430e475b8a9fa3d606aec9a8b09596fffbcd2c9"
     logLevel: 2
     resources: {}
     securityContext:
@@ -116,24 +121,24 @@ controller:
   affinity:
     nodeAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 1
-        preference:
-          matchExpressions:
-          - key: eks.amazonaws.com/compute-type
-            operator: NotIn
-            values:
-            - fargate
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                  - fargate
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - podAffinityTerm:
-          labelSelector:
-            matchExpressions:
-            - key: app
-              operator: In
-              values:
-              - ebs-csi-controller
-          topologyKey: kubernetes.io/hostname
-        weight: 100
+        - podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - ebs-csi-controller
+            topologyKey: kubernetes.io/hostname
+          weight: 100
   # The default filesystem type of the volume to provision when fstype is unspecified in the StorageClass.
   # If the default is not set and fstype is unset in the StorageClass, then no fstype will be set
   defaultFsType: ext4
@@ -192,7 +197,7 @@ controller:
       cpu: 100m
       memory: 256Mi
   serviceAccount:
-  # A service account will be created for you if set to true. Set to false if you want to use your own.
+    # A service account will be created for you if set to true. Set to false if you want to use your own.
     create: true
     name: ebs-csi-controller-sa
     annotations: {}
@@ -246,19 +251,19 @@ node:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
-        - matchExpressions:
-          - key: eks.amazonaws.com/compute-type
-            operator: NotIn
-            values:
-            - fargate
+          - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                  - fargate
   nodeSelector: {}
   podAnnotations: {}
   podLabels: {}
   tolerateAllTaints: true
   tolerations:
-  - operator: Exists
-    effect: NoExecute
-    tolerationSeconds: 300
+    - operator: Exists
+      effect: NoExecute
+      tolerationSeconds: 300
   resources:
     requests:
       cpu: 10m

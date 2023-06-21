@@ -30,3 +30,6 @@ vendor/
 
 # .image-* files used by Makefile
 .image-*
+
+# generated sonobuoy files
+sonobuoy.yaml

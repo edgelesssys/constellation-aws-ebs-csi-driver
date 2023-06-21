@@ -151,7 +151,7 @@ data:
     SnapshotClass:
       FromName: true
     DriverInfo:
-      Name: ebs.csi.aws.com
+      Name: aws.csi.confidential.cloud
       SupportedSizeRange:
         Min: 1Gi
         Max: 16Ti
@@ -160,7 +160,7 @@ data:
         ext4: {}
       SupportedMountOption:
         dirsync: {}
-      TopologyKeys: ["topology.ebs.csi.aws.com/zone"]
+      TopologyKeys: ["topology.aws.csi.confidential.cloud/zone"]
       Capabilities:
         persistence: true
         fsGroup: true
@@ -177,8 +177,8 @@ data:
     kind: StorageClass
     apiVersion: storage.k8s.io/v1
     metadata:
-      name: ebs.csi.aws.com
-    provisioner: ebs.csi.aws.com
+      name: aws.csi.confidential.cloud
+    provisioner: aws.csi.confidential.cloud
     volumeBindingMode: WaitForFirstConsumer
 metadata:
   name: ebs-csi-driver-test
@@ -207,10 +207,10 @@ spec:
           kubectl config set-credentials sa --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
           kubectl config set-context kubetest2 --user=sa && kubectl config use-context kubetest2
           kubectl get crd volumesnapshots.snapshot.storage.k8s.io
-          if [ $? -eq 0 ]; then 
+          if [ $? -eq 0 ]; then
             SNAPSHOTS="|snapshot fields"
           fi
-          export FOCUS_REGEX="\bebs.csi.aws.com\b.+(validate content|resize volume|offline PVC|AllowedTopologies|store data$SNAPSHOTS)"
+          export FOCUS_REGEX="\baws.csi.confidential.cloud\b.+(validate content|resize volume|offline PVC|AllowedTopologies|store data$SNAPSHOTS)"
           kubetest2 noop --run-id='e2e-kubernetes' --test=ginkgo -- --test-package-version=$(curl https://storage.googleapis.com/kubernetes-release/release/stable-1.25.txt) --skip-regex='\[Disruptive\]|\[Serial\]' --focus-regex="$FOCUS_REGEX" --parallel=25 --test-args='-storage.testdriver=/etc/config/manifests.yaml'
       volumeMounts:
       - name: config-vol

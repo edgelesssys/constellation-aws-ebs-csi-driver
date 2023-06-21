@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2019 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +52,11 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"k8s.io/klog/v2"
+)
+
+const (
+	// minVolumeSizeBytes is the minimum volume size supported by the driver (1 GiB)
+	minVolumeSizeBytes = 1 * 1024 * 1024 * 1024 // 1 GiB
 )
 
 var (
@@ -108,6 +131,9 @@ func (d *controllerService) CreateVolume(ctx context.Context, req *csi.CreateVol
 	volSizeBytes, err := getVolSizeBytes(req)
 	if err != nil {
 		return nil, err
+	}
+	if volSizeBytes <= minVolumeSizeBytes {
+		return nil, status.Errorf(codes.InvalidArgument, "volume size %d is too small (minimal required size is %d)", volSizeBytes, minVolumeSizeBytes)
 	}
 	volName := req.GetName()
 
@@ -554,8 +580,8 @@ func isValidVolumeCapabilities(volCaps []*csi.VolumeCapability) bool {
 }
 
 func isValidVolumeContext(volContext map[string]string) bool {
-	//There could be multiple volume attributes in the volumeContext map
-	//Validate here case by case
+	// There could be multiple volume attributes in the volumeContext map
+	// Validate here case by case
 	if partition, ok := volContext[VolumeAttributePartition]; ok {
 		partitionInt, err := strconv.ParseInt(partition, 10, 64)
 		if err != nil {
@@ -878,7 +904,6 @@ func newCreateSnapshotResponse(snapshot *cloud.Snapshot) (*csi.CreateSnapshotRes
 }
 
 func newListSnapshotsResponse(cloudResponse *cloud.ListSnapshotsResponse) *csi.ListSnapshotsResponse {
-
 	var entries []*csi.ListSnapshotsResponse_Entry
 	for _, snapshot := range cloudResponse.Snapshots {
 		snapshotResponseEntry := newListSnapshotsResponseEntry(snapshot)
@@ -921,7 +946,6 @@ func getVolSizeBytes(req *csi.CreateVolumeRequest) (int64, error) {
 
 // BuildOutpostArn returns the string representation of the outpost ARN from the given csi.TopologyRequirement.segments
 func BuildOutpostArn(segments map[string]string) string {
-
 	if len(segments[AwsPartitionKey]) <= 0 {
 		return ""
 	}
