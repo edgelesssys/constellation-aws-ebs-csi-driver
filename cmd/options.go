@@ -1,4 +1,22 @@
 /*
+Copyright (c) Edgeless Systems GmbH
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file incorporates work covered by the following copyright and
+permission notice:
+
+
 Copyright 2020 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,8 +70,9 @@ func GetOptions(fs *flag.FlagSet) *Options {
 	var (
 		version  = fs.Bool("version", false, "Print the version and exit.")
 		toStderr = fs.Bool("logtostderr", false, "log to standard error instead of files. DEPRECATED: will be removed in a future release.")
-		args     = os.Args[1:]
-		mode     = driver.AllMode
+
+		args = os.Args[1:]
+		mode = driver.AllMode
 
 		serverOptions     = options.ServerOptions{}
 		controllerOptions = options.ControllerOptions{}
