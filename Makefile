@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION?=v1.18.0
+VERSION?=v1.0.0
 
 PKG=github.com/kubernetes-sigs/aws-ebs-csi-driver
 GIT_COMMIT?=$(shell git rev-parse HEAD)
@@ -25,8 +25,9 @@ GOPATH=$(shell go env GOPATH)
 GOOS=$(shell go env GOOS)
 GOBIN=$(shell pwd)/bin
 
-REGISTRY?=gcr.io/k8s-staging-provider-aws
-IMAGE?=$(REGISTRY)/aws-ebs-csi-driver
+REGISTRY?=ghcr.io/edgelesssys/constellation
+IMAGE?=$(REGISTRY)/aws-csi-driver
+DRIVERVERSION=$(VERSION)
 TAG?=$(GIT_COMMIT)
 
 OUTPUT_TYPE?=docker
@@ -35,14 +36,10 @@ OS?=linux
 ARCH?=amd64
 OSVERSION?=amazon
 
-ALL_OS?=linux windows
+ALL_OS?=linux
 ALL_ARCH_linux?=amd64 arm64
 ALL_OSVERSION_linux?=amazon
 ALL_OS_ARCH_OSVERSION_linux=$(foreach arch, $(ALL_ARCH_linux), $(foreach osversion, ${ALL_OSVERSION_linux}, linux-$(arch)-${osversion}))
-
-ALL_ARCH_windows?=amd64
-ALL_OSVERSION_windows?=20H2 ltsc2019 ltsc2022
-ALL_OS_ARCH_OSVERSION_windows=$(foreach arch, $(ALL_ARCH_windows), $(foreach osversion, ${ALL_OSVERSION_windows}, windows-$(arch)-${osversion}))
 
 ALL_OS_ARCH_OSVERSION=$(foreach os, $(ALL_OS), ${ALL_OS_ARCH_OSVERSION_${os}})
 
@@ -54,18 +51,14 @@ word-hyphen = $(word $2,$(subst -, ,$1))
 .PHONY: linux/$(ARCH) bin/aws-ebs-csi-driver
 linux/$(ARCH): bin/aws-ebs-csi-driver
 bin/aws-ebs-csi-driver: | bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH) go build -mod=mod -ldflags ${LDFLAGS} -o bin/aws-ebs-csi-driver ./cmd/
+	CGO_ENABLED=1 GOOS=linux GOARCH=$(ARCH) go build -mod=mod -ldflags ${LDFLAGS} -o bin/aws-ebs-csi-driver ./cmd/
 
-.PHONY: windows/$(ARCH) bin/aws-ebs-csi-driver.exe
-windows/$(ARCH): bin/aws-ebs-csi-driver.exe
-bin/aws-ebs-csi-driver.exe: | bin
-	CGO_ENABLED=0 GOOS=windows GOARCH=$(ARCH) go build -mod=mod -ldflags ${LDFLAGS} -o bin/aws-ebs-csi-driver.exe ./cmd/
 
 # Builds all linux images (not windows because it can't be exported with OUTPUT_TYPE=docker)
 .PHONY: all
 all: all-image-docker
 
-# Builds all linux and windows images and pushes them
+# Builds all linux images and pushes them
 .PHONY: all-push
 all-push: all-image-registry push-manifest
 
@@ -94,17 +87,14 @@ sub-image-%:
 .PHONY: image
 image: .image-$(TAG)-$(OS)-$(ARCH)-$(OSVERSION)
 .image-$(TAG)-$(OS)-$(ARCH)-$(OSVERSION):
-	docker buildx build \
+	DOCKER_BUILDKIT=1 docker build \
 		--platform=$(OS)/$(ARCH) \
 		--progress=plain \
 		--target=$(OS)-$(OSVERSION) \
-		--output=type=$(OUTPUT_TYPE) \
-		-t=$(IMAGE):$(TAG)-$(OS)-$(ARCH)-$(OSVERSION) \
+		-t=$(IMAGE):$(DRIVERVERSION) \
 		--build-arg=GOPROXY=$(GOPROXY) \
 		--build-arg=VERSION=$(VERSION) \
-		`./hack/provenance` \
 		.
-	touch $@
 
 .PHONY: clean
 clean:

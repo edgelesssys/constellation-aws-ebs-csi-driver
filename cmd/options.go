@@ -38,6 +38,7 @@ type Options struct {
 	*options.ServerOptions
 	*options.ControllerOptions
 	*options.NodeOptions
+	*options.KMSOptions
 }
 
 // used for testing
@@ -51,16 +52,17 @@ func GetOptions(fs *flag.FlagSet) *Options {
 	var (
 		version  = fs.Bool("version", false, "Print the version and exit.")
 		toStderr = fs.Bool("logtostderr", false, "log to standard error instead of files. DEPRECATED: will be removed in a future release.")
-
-		args = os.Args[1:]
-		mode = driver.AllMode
+		args     = os.Args[1:]
+		mode     = driver.AllMode
 
 		serverOptions     = options.ServerOptions{}
 		controllerOptions = options.ControllerOptions{}
 		nodeOptions       = options.NodeOptions{}
+		kmsOptions        = options.KMSOptions{}
 	)
 
 	serverOptions.AddFlags(fs)
+	kmsOptions.AddFlags(fs)
 
 	c := logsapi.NewLoggingConfiguration()
 
@@ -130,5 +132,6 @@ func GetOptions(fs *flag.FlagSet) *Options {
 		ServerOptions:     &serverOptions,
 		ControllerOptions: &controllerOptions,
 		NodeOptions:       &nodeOptions,
+		KMSOptions:        &kmsOptions,
 	}
 }

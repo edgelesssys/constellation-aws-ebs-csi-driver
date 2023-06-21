@@ -40,7 +40,7 @@ const (
 )
 
 const (
-	DriverName      = "ebs.csi.aws.com"
+	DriverName      = "aws.csi.confidential.cloud"
 	AwsPartitionKey = "topology." + DriverName + "/partition"
 	AwsAccountIDKey = "topology." + DriverName + "/account-id"
 	AwsRegionKey    = "topology." + DriverName + "/region"
@@ -50,6 +50,13 @@ const (
 	// DEPRECATED Use the WellKnownTopologyKey instead
 	TopologyKey = "topology." + DriverName + "/zone"
 )
+
+type cryptMapper interface {
+	CloseCryptDevice(volumeID string) error
+	OpenCryptDevice(ctx context.Context, source, volumeID string, integrity bool) (string, error)
+	ResizeCryptDevice(ctx context.Context, volumeID string) (string, error)
+	GetDevicePath(volumeID string) (string, error)
+}
 
 type Driver struct {
 	controllerService
@@ -67,6 +74,7 @@ type DriverOptions struct {
 	kubernetesClusterID string
 	awsSdkDebugLog      bool
 	warnOnInvalidTag    bool
+	cm                  cryptMapper
 }
 
 func NewDriver(options ...func(*DriverOptions)) (*Driver, error) {
@@ -146,6 +154,12 @@ func (d *Driver) Run() error {
 
 func (d *Driver) Stop() {
 	d.srv.Stop()
+}
+
+func WithCryptMapper(cm cryptMapper) func(*DriverOptions) {
+	return func(o *DriverOptions) {
+		o.cm = cm
+	}
 }
 
 func WithEndpoint(endpoint string) func(*DriverOptions) {

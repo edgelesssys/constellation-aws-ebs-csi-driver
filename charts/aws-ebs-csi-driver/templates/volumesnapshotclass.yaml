@@ -8,7 +8,7 @@ metadata:
   {{- with .annotations }}
   annotations: {{- . | toYaml | trim | nindent 4 }}
   {{- end }}
-driver: ebs.csi.aws.com
+driver: aws.csi.confidential.cloud
 deletionPolicy: {{ .deletionPolicy }}
 {{- with .parameters }}
 parameters: {{- . | toYaml | trim | nindent 2 }}
