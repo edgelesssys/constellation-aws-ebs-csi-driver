@@ -5,7 +5,7 @@ metadata:
   annotations:
   name: integrity-encrypted-rwo
 parameters:
-  type: pd-ssd
+  type: gp3
   csi.storage.k8s.io/fstype: ext4-integrity
 provisioner: aws.csi.confidential.cloud
 allowVolumeExpansion: false
