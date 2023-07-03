@@ -242,8 +242,9 @@ controller:
   k8sTagClusterId:
   logLevel: 2
   userAgentExtra: "helm"
-  nodeSelector: {}
   deploymentAnnotations: {}
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: ""
   podAnnotations: {}
   podLabels: {}
   priorityClassName: system-cluster-critical
@@ -281,9 +282,18 @@ controller:
   tolerations:
     - key: CriticalAddonsOnly
       operator: Exists
-    - effect: NoExecute
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
       operator: Exists
-      tolerationSeconds: 300
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
+      operator: Exists
+    - effect: NoSchedule
+      key: node.cloudprovider.kubernetes.io/uninitialized
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/not-ready
+      operator: Exists
   # TSCs without the label selector stanza
   #
   # Example:
@@ -330,7 +340,7 @@ controller:
   otelTracing: {}
   #  otelServiceName: ebs-csi-controller
   #  otelExporterEndpoint: "http://localhost:4317"
-  
+
   # Enable dnsConfig for the controller and node pods
   dnsConfig: {}
 
