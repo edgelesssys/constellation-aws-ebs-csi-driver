@@ -36,10 +36,10 @@ package driver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -49,6 +49,9 @@ import (
 	"github.com/kubernetes-sigs/aws-ebs-csi-driver/pkg/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/volume"
 )
@@ -102,6 +105,13 @@ func newNodeService(driverOptions *DriverOptions) nodeService {
 	nodeMounter, err := newNodeMounter()
 	if err != nil {
 		panic(err)
+	}
+
+	// Remove taint from node to indicate driver startup success
+	// This is done at the last possible moment to prevent race conditions or false positive removals
+	err = removeNotReadyTaint(cloud.DefaultKubernetesAPIClient)
+	if err != nil {
+		klog.ErrorS(err, "Unexpected failure when attempting to remove node taint(s)")
 	}
 
 	return nodeService{
@@ -216,20 +226,43 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 
 	// [Edgeless] 5: Continue with mounting as normal
 	context := req.GetVolumeContext()
-	blockSize, ok := context[BlockSizeKey]
-	if ok {
-		// This check is already performed on the controller side
-		// However, because it is potentially security-sensitive, we redo it here to be safe
-		_, err := strconv.Atoi(blockSize)
-		if err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "Invalid blockSize (aborting!): %v", err)
-		}
 
-		// In the case that the default fstype does not support custom block sizes we could
-		// be using an invalid fstype, so recheck that here
-		if _, ok = BlockSizeExcludedFSTypes[strings.ToLower(fsType)]; ok {
-			return nil, status.Errorf(codes.InvalidArgument, "Cannot use block size with fstype %s", fsType)
-		}
+	inodeSize, err := recheckFormattingOptionParameter(context, InodeSizeKey, FileSystemConfigs, fsType)
+	if err != nil {
+		return nil, err
+	}
+	bytesPerInode, err := recheckFormattingOptionParameter(context, BytesPerInodeKey, FileSystemConfigs, fsType)
+	if err != nil {
+		return nil, err
+	}
+	numInodes, err := recheckFormattingOptionParameter(context, NumberOfInodesKey, FileSystemConfigs, fsType)
+	if err != nil {
+		return nil, err
+	}
+	ext4BigAlloc, err := recheckFormattingOptionParameter(context, Ext4BigAllocKey, FileSystemConfigs, fsType)
+	if err != nil {
+		return nil, err
+	}
+	ext4ClusterSize, err := recheckFormattingOptionParameter(context, Ext4ClusterSizeKey, FileSystemConfigs, fsType)
+	if err != nil {
+		return nil, err
+	}
+
+	blockSize, err := recheckFormattingOptionParameter(context, BlockSizeKey, FileSystemConfigs, fsType)
+	if err != nil {
+		return nil, err
+	}
+	// This check is already performed on the controller side
+	// However, because it is potentially security-sensitive, we redo it here to be safe
+	_, err := strconv.Atoi(blockSize)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid blockSize (aborting!): %v", err)
+	}
+
+	// In the case that the default fstype does not support custom block sizes we could
+	// be using an invalid fstype, so recheck that here
+	if _, ok = BlockSizeExcludedFSTypes[strings.ToLower(fsType)]; ok {
+		return nil, status.Errorf(codes.InvalidArgument, "Cannot use block size with fstype %s", fsType)
 	}
 
 	if ok = d.inFlight.Insert(volumeID); !ok {
@@ -258,13 +291,32 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	// FormatAndMount will format only if needed
-	klog.V(4).InfoS("NodeStageVolume: formatting and mounting with fstype", "devicePath", devicePath, "volumeID", volumeID, "target", target, "fstype", fsType)
+	klog.V(4).InfoS("NodeStageVolume: formatting and mounting with fstype", "source", source, "devicePath", devicePath, "volumeID", volumeID, "target", target, "fstype", fsType)
 	formatOptions := []string{}
 	if len(blockSize) > 0 {
 		if fsType == FSTypeXfs {
 			blockSize = "size=" + blockSize
 		}
 		formatOptions = append(formatOptions, "-b", blockSize)
+	}
+	if len(inodeSize) > 0 {
+		option := "-I"
+		if fsType == FSTypeXfs {
+			option, inodeSize = "-i", "size="+inodeSize
+		}
+		formatOptions = append(formatOptions, option, inodeSize)
+	}
+	if len(bytesPerInode) > 0 {
+		formatOptions = append(formatOptions, "-i", bytesPerInode)
+	}
+	if len(numInodes) > 0 {
+		formatOptions = append(formatOptions, "-N", numInodes)
+	}
+	if ext4BigAlloc == "true" {
+		formatOptions = append(formatOptions, "-O", "bigalloc")
+	}
+	if len(ext4ClusterSize) > 0 {
+		formatOptions = append(formatOptions, "-C", ext4ClusterSize)
 	}
 	err = d.mounter.FormatAndMountSensitiveWithFormatOptions(devicePath, target, fsType, mountOptions, nil, formatOptions)
 	if err != nil {
@@ -287,7 +339,7 @@ func (d *nodeService) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 			return nil, status.Errorf(codes.Internal, "Could not resize volume %q (%q):  %v", volumeID, devicePath, err)
 		}
 	}
-	klog.V(4).InfoS("NodeStageVolume: successfully formatted and mounted volume", "devicePath", devicePath, "volumeID", volumeID, "target", target, "fstype", fsType)
+	klog.V(4).InfoS("NodeStageVolume: successfully formatted and mounted volume", "source", source, "devicePath", devicePath, "volumeID", volumeID, "target", target, "fstype", fsType)
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
@@ -354,7 +406,7 @@ func (d *nodeService) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 }
 
 func (d *nodeService) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
-	klog.V(4).Infof("NodeExpandVolume: called", "args", *req)
+	klog.V(4).InfoS("NodeExpandVolume: called", "args", *req)
 	volumeID := req.GetVolumeId()
 	if len(volumeID) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID not provided")
@@ -603,7 +655,7 @@ func (d *nodeService) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetC
 }
 
 func (d *nodeService) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
-	klog.V(4).Infof("NodeGetInfo: called", "args", *req)
+	klog.V(4).InfoS("NodeGetInfo: called", "args", *req)
 
 	zone := d.metadata.GetAvailabilityZone()
 
@@ -800,9 +852,13 @@ func (d *nodeService) getVolumesLimit() int64 {
 	isNitro := cloud.IsNitroInstanceType(instanceType)
 	availableAttachments := cloud.GetMaxAttachments(isNitro)
 	blockVolumes := d.metadata.GetNumBlockDeviceMappings()
+	dedicatedLimit := cloud.GetDedicatedLimitForInstanceType(instanceType)
 
-	// For Nitro instances, attachments are shared between EBS volumes, ENIs and NVMe instance stores
-	if isNitro {
+	// For special dedicated limit instance types, the limit is only for EBS volumes
+	// For (all other) Nitro instances, attachments are shared between EBS volumes, ENIs and NVMe instance stores
+	if dedicatedLimit != 0 {
+		availableAttachments = dedicatedLimit
+	} else if isNitro {
 		enis := d.metadata.GetNumAttachedENIs()
 		nvmeInstanceStoreVolumes := cloud.GetNVMeInstanceStoreVolumesForInstanceType(instanceType)
 		availableAttachments = availableAttachments - enis - nvmeInstanceStoreVolumes
@@ -858,4 +914,90 @@ func collectMountOptions(fsType string, mntFlags []string) []string {
 		}
 	}
 	return options
+}
+
+// Struct for JSON patch operations
+type JSONPatch struct {
+	OP    string      `json:"op,omitempty"`
+	Path  string      `json:"path,omitempty"`
+	Value interface{} `json:"value"`
+}
+
+// removeNotReadyTaint removes the taint ebs.csi.aws.com/agent-not-ready from the local node
+// This taint can be optionally applied by users to prevent startup race conditions such as
+// https://github.com/kubernetes/kubernetes/issues/95911
+func removeNotReadyTaint(k8sClient cloud.KubernetesAPIClient) error {
+	nodeName := os.Getenv("CSI_NODE_NAME")
+	if nodeName == "" {
+		klog.V(4).InfoS("CSI_NODE_NAME missing, skipping taint removal")
+		return nil
+	}
+
+	clientset, err := k8sClient()
+	if err != nil {
+		klog.V(4).InfoS("Failed to communicate with k8s API, skipping taint removal")
+		return nil //lint:ignore nilerr Failing to communicate with k8s API is a soft failure
+	}
+
+	node, err := clientset.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	var taintsToKeep []corev1.Taint
+	for _, taint := range node.Spec.Taints {
+		if taint.Key != AgentNotReadyNodeTaintKey {
+			taintsToKeep = append(taintsToKeep, taint)
+		} else {
+			klog.V(4).InfoS("Queued taint for removal", "key", taint.Key, "effect", taint.Effect)
+		}
+	}
+
+	if len(taintsToKeep) == len(node.Spec.Taints) {
+		klog.V(4).InfoS("No taints to remove on node, skipping taint removal")
+		return nil
+	}
+
+	patchRemoveTaints := []JSONPatch{
+		{
+			OP:    "test",
+			Path:  "/spec/taints",
+			Value: node.Spec.Taints,
+		},
+		{
+			OP:    "replace",
+			Path:  "/spec/taints",
+			Value: taintsToKeep,
+		},
+	}
+
+	patch, err := json.Marshal(patchRemoveTaints)
+	if err != nil {
+		return err
+	}
+
+	_, err = clientset.CoreV1().Nodes().Patch(context.Background(), nodeName, k8stypes.JSONPatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		return err
+	}
+	klog.InfoS("Removed taint(s) from local node", "node", nodeName)
+	return nil
+}
+
+func recheckFormattingOptionParameter(context map[string]string, key string, fsConfigs map[string]fileSystemConfig, fsType string) (value string, err error) {
+	v, ok := context[key]
+	if ok {
+		// This check is already performed on the controller side
+		// However, because it is potentially security-sensitive, we redo it here to be safe
+		if isAlphanumeric := util.StringIsAlphanumeric(value); !isAlphanumeric {
+			return "", status.Errorf(codes.InvalidArgument, "Invalid %s (aborting!): %v", key, err)
+		}
+
+		// In the case that the default fstype does not support custom sizes we could
+		// be using an invalid fstype, so recheck that here
+		if supported := fsConfigs[strings.ToLower(fsType)].isParameterSupported(key); !supported {
+			return "", status.Errorf(codes.InvalidArgument, "Cannot use %s with fstype %s", key, fsType)
+		}
+	}
+	return v, nil
 }

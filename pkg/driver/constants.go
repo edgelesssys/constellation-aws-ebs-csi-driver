@@ -85,6 +85,21 @@ const (
 	// BlockSizeKey configures the block size when formatting a volume
 	BlockSizeKey = "blocksize"
 
+	// InodeSizeKey configures the inode size when formatting a volume
+	InodeSizeKey = "inodesize"
+
+	// BytesPerInodeKey configures the `bytes-per-inode` when formatting a volume
+	BytesPerInodeKey = "bytesperinode"
+
+	// NumberOfInodesKey configures the `number-of-inodes` when formatting a volume
+	NumberOfInodesKey = "numberofinodes"
+
+	// Ext4ClusterSizeKey enables the bigalloc option when formatting an ext4 volume
+	Ext4BigAllocKey = "ext4bigalloc"
+
+	// Ext4ClusterSizeKey configures the cluster size when formatting an ext4 volume with the bigalloc option enabled
+	Ext4ClusterSizeKey = "ext4clustersize"
+
 	// TagKeyPrefix contains the prefix of a volume parameter that designates it as
 	// a tag to be attached to the resource
 	TagKeyPrefix = "tagSpecification"
@@ -161,9 +176,55 @@ const (
 	FSTypeNtfs = "ntfs"
 )
 
-// BlockSizeExcludedFSTypes contains the filesystems that a custom block size is *NOT* supported on
+// constants for node k8s API use
+const (
+	// AgentNotReadyNodeTaintKey contains the key of taints to be removed on driver startup
+	AgentNotReadyNodeTaintKey = "ebs.csi.aws.com/agent-not-ready"
+)
+
+type fileSystemConfig struct {
+	NotSupportedParams map[string]struct{}
+}
+
+func (fsConfig fileSystemConfig) isParameterSupported(paramName string) bool {
+	_, notSupported := fsConfig.NotSupportedParams[paramName]
+	return !notSupported
+}
+
 var (
-	BlockSizeExcludedFSTypes = map[string]struct{}{
-		FSTypeNtfs: {},
+	FileSystemConfigs = map[string]fileSystemConfig{
+		FSTypeExt2: {
+			NotSupportedParams: map[string]struct{}{
+				Ext4BigAllocKey:    {},
+				Ext4ClusterSizeKey: {},
+			},
+		},
+		FSTypeExt3: {
+			NotSupportedParams: map[string]struct{}{
+				Ext4BigAllocKey:    {},
+				Ext4ClusterSizeKey: {},
+			},
+		},
+		FSTypeExt4: {
+			NotSupportedParams: map[string]struct{}{},
+		},
+		FSTypeXfs: {
+			NotSupportedParams: map[string]struct{}{
+				BytesPerInodeKey:   {},
+				NumberOfInodesKey:  {},
+				Ext4BigAllocKey:    {},
+				Ext4ClusterSizeKey: {},
+			},
+		},
+		FSTypeNtfs: {
+			NotSupportedParams: map[string]struct{}{
+				BlockSizeKey:       {},
+				InodeSizeKey:       {},
+				BytesPerInodeKey:   {},
+				NumberOfInodesKey:  {},
+				Ext4BigAllocKey:    {},
+				Ext4ClusterSizeKey: {},
+			},
+		},
 	}
 )

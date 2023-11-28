@@ -14,6 +14,29 @@ const (
 	nitroMaxAttachments                  = 28
 )
 
+func init() {
+	// This list of Nitro instance types have a dedicated Amazon EBS volume limit of up to 128 attachments, depending on instance size.
+	// The limit is not shared with other device attachments: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/volume_limits.html#nitro-system-limits
+	instanceFamilies := []string{"m7i", "m7a", "c7i", "c7a", "r7a", "r7i", "r7iz"}
+	commonInstanceSizes := []string{"medium", "large", "xlarge", "2xlarge", "4xlarge", "8xlarge", "12xlarge"}
+
+	for _, family := range instanceFamilies {
+		for _, size := range commonInstanceSizes {
+			dedicatedVolumeLimits[family+"."+size] = 32
+		}
+		dedicatedVolumeLimits[family+".metal-16xl"] = 31
+		dedicatedVolumeLimits[family+".metal-24xl"] = 31
+		dedicatedVolumeLimits[family+".16xlarge"] = 48
+		dedicatedVolumeLimits[family+".24xlarge"] = 64
+		dedicatedVolumeLimits[family+".metal-32xl"] = 79
+		dedicatedVolumeLimits[family+".metal-48xl"] = 79
+		dedicatedVolumeLimits[family+".32xlarge"] = 88
+		dedicatedVolumeLimits[family+".48xlarge"] = 128
+	}
+}
+
+var dedicatedVolumeLimits = map[string]int{}
+
 // / List of nitro instance types can be found here: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances
 var nonNitroInstanceFamilies = map[string]struct{}{
 	"t2":  {},
@@ -93,6 +116,14 @@ func GetEBSLimitForInstanceType(it string) (int, bool) {
 	return 0, false
 }
 
+func GetDedicatedLimitForInstanceType(it string) int {
+	if limit, ok := dedicatedVolumeLimits[it]; ok {
+		return limit
+	} else {
+		return 0
+	}
+}
+
 func GetNVMeInstanceStoreVolumesForInstanceType(it string) int {
 	if v, ok := nvmeInstanceStoreVolumes[it]; ok {
 		return v
@@ -169,6 +200,14 @@ var nvmeInstanceStoreVolumes = map[string]int{
 	"i3en.12xlarge":  4,
 	"i3en.24xlarge":  8,
 	"i3en.metal":     8,
+	"i4i.large":      1,
+	"i4i.xlarge":     1,
+	"i4i.2xlarge":    1,
+	"i4i.4xlarge":    1,
+	"i4i.8xlarge":    2,
+	"i4i.16xlarge":   4,
+	"i4i.32xlarge":   8,
+	"i4i.metal":      8,
 	"im4gn.large":    1,
 	"im4gn.xlarge":   1,
 	"im4gn.2xlarge":  1,
