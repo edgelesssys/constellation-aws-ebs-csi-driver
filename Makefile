@@ -52,11 +52,11 @@ OUTPUT_TYPE?=docker
 
 OS?=linux
 ARCH?=amd64
-OSVERSION?=amazon
+OSVERSION?=al2023
 
 ALL_OS?=linux
 ALL_ARCH_linux?=amd64 arm64
-ALL_OSVERSION_linux?=amazon
+ALL_OSVERSION_linux?=al2023
 ALL_OS_ARCH_OSVERSION_linux=$(foreach arch, $(ALL_ARCH_linux), $(foreach osversion, ${ALL_OSVERSION_linux}, linux-$(arch)-${osversion}))
 
 ALL_OS_ARCH_OSVERSION=$(foreach os, $(ALL_OS), ${ALL_OS_ARCH_OSVERSION_${os}})
@@ -97,7 +97,7 @@ create-manifest: all-image-registry
 .PHONY: all-image-docker
 all-image-docker: $(addprefix sub-image-docker-,$(ALL_OS_ARCH_OSVERSION_linux))
 .PHONY: all-image-registry
-all-image-registry: $(addprefix sub-image-registry-,$(ALL_OS_ARCH_OSVERSION))
+all-image-registry: sub-image-registry-linux-arm64-al2 $(addprefix sub-image-registry-,$(ALL_OS_ARCH_OSVERSION))
 
 sub-image-%:
 	$(MAKE) OUTPUT_TYPE=$(call word-hyphen,$*,1) OS=$(call word-hyphen,$*,2) ARCH=$(call word-hyphen,$*,3) OSVERSION=$(call word-hyphen,$*,4) image
@@ -191,6 +191,21 @@ test-e2e-external:
 	TEST_PATH=./tests/e2e-kubernetes/... \
 	GINKGO_FOCUS="External.Storage" \
 	GINKGO_SKIP="\[Disruptive\]|\[Serial\]" \
+	COLLECT_METRICS="true" \
+	./hack/e2e/run.sh
+
+.PHONY: test-e2e-external-arm64
+test-e2e-external-arm64:
+	AWS_REGION=us-west-2 \
+	AWS_AVAILABILITY_ZONES=us-west-2a,us-west-2b,us-west-2c \
+	HELM_EXTRA_FLAGS='--set=controller.k8sTagClusterId=$$CLUSTER_NAME' \
+	EBS_INSTALL_SNAPSHOT="true" \
+	TEST_PATH=./tests/e2e-kubernetes/... \
+	GINKGO_FOCUS="External.Storage" \
+	GINKGO_SKIP="\[Disruptive\]|\[Serial\]" \
+	INSTANCE_TYPE="m7g.medium" \
+	AMI_PARAMETER="/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64" \
+	IMAGE_ARCH="arm64" \
 	./hack/e2e/run.sh
 
 .PHONY: test-e2e-external-eks
@@ -221,6 +236,17 @@ test-e2e-external-eks-windows:
 	GINKGO_SKIP="\[Disruptive\]|\[Serial\]|\[LinuxOnly\]|\[Feature:VolumeSnapshotDataSource\]|\(xfs\)|\(ext4\)|\(block volmode\)" \
 	GINKGO_PARALLEL=15 \
 	NODE_OS_DISTRO="windows" \
+	./hack/e2e/run.sh
+
+.PHONY: test-e2e-external-kustomize
+test-e2e-external-kustomize:
+	AWS_REGION=us-west-2 \
+	AWS_AVAILABILITY_ZONES=us-west-2a,us-west-2b,us-west-2c \
+	EBS_INSTALL_SNAPSHOT="true" \
+	TEST_PATH=./tests/e2e-kubernetes/... \
+	GINKGO_FOCUS="External.Storage" \
+	GINKGO_SKIP="\[Disruptive\]|\[Serial\]" \
+	DEPLOY_METHOD="kustomize" \
 	./hack/e2e/run.sh
 
 .PHONY: test-helm-chart
@@ -256,9 +282,11 @@ generate-kustomize: bin/helm
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/clusterrolebinding-provisioner.yaml > ../../deploy/kubernetes/base/clusterrolebinding-provisioner.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/clusterrolebinding-resizer.yaml > ../../deploy/kubernetes/base/clusterrolebinding-resizer.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/clusterrolebinding-snapshotter.yaml > ../../deploy/kubernetes/base/clusterrolebinding-snapshotter.yaml
-	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/controller.yaml --api-versions 'snapshot.storage.k8s.io/v1' | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/controller.yaml
+	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/controller.yaml --api-versions 'snapshot.storage.k8s.io/v1' --set 'controller.userAgentExtra=kustomize' | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/controller.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/csidriver.yaml > ../../deploy/kubernetes/base/csidriver.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/node.yaml | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/node.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/poddisruptionbudget-controller.yaml --api-versions 'policy/v1/PodDisruptionBudget' | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/poddisruptionbudget-controller.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/serviceaccount-csi-controller.yaml | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/serviceaccount-csi-controller.yaml
 	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/serviceaccount-csi-node.yaml | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/serviceaccount-csi-node.yaml
+	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/role-leases.yaml | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/role-leases.yaml
+	cd charts/aws-ebs-csi-driver && ../../bin/helm template kustomize . -s templates/rolebinding-leases.yaml | sed -e "/namespace: /d" > ../../deploy/kubernetes/base/rolebinding-leases.yaml
