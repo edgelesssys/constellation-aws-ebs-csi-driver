@@ -36,8 +36,8 @@
 FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS builder
 
 RUN apt-get update && apt-get install -y wget libcryptsetup-dev build-essential tar git pkgconf
-RUN wget https://golang.org/dl/go1.20.5.linux-amd64.tar.gz
-RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-amd64.tar.gz
+RUN wget https://golang.org/dl/go1.22.3.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
 WORKDIR /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver
@@ -49,7 +49,7 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG VERSION
 
-RUN OS=$TARGETOS ARCH=$TARGETARCH make $TARGETOS/$TARGETARCH
+RUN OS=$TARGETOS ARCH=$TARGETARCH make
 
 # Driver image
 FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS linux-amazon
