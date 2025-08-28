@@ -33,11 +33,11 @@
 # See
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 # for info on BUILDPLATFORM, TARGETOS, TARGETARCH, etc.
-FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS builder
+FROM registry.k8s.io/build-image/debian-base:bookworm-v1.0.5 AS builder
 
 RUN apt-get update && apt-get install -y wget libcryptsetup-dev build-essential tar git pkgconf
-RUN wget https://golang.org/dl/go1.22.3.linux-amd64.tar.gz
-RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
+RUN wget https://golang.org/dl/go1.24.6.linux-amd64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.24.6.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
 WORKDIR /go/src/github.com/kubernetes-sigs/aws-ebs-csi-driver
@@ -52,7 +52,7 @@ ARG VERSION
 RUN OS=$TARGETOS ARCH=$TARGETARCH make
 
 # Driver image
-FROM registry.k8s.io/build-image/debian-base:bullseye-v1.4.3 AS linux-amazon
+FROM registry.k8s.io/build-image/debian-base:bookworm-v1.0.5 AS linux-amazon
 
 RUN apt-get update && apt-get install -y util-linux e2fsprogs mount ca-certificates udev xfsprogs btrfs-progs libcryptsetup-dev
 

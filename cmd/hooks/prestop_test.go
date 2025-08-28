@@ -11,7 +11,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/watch"
-	corev1beta1 "sigs.k8s.io/karpenter/pkg/apis/v1beta1"
+	corev1beta1 "sigs.k8s.io/karpenter/pkg/apis/v1"
 )
 
 func TestPreStopHook(t *testing.T) {
@@ -220,7 +220,7 @@ func TestPreStopHook(t *testing.T) {
 					Spec: v1.NodeSpec{
 						Taints: []v1.Taint{
 							{
-								Key:    corev1beta1.DisruptionNoScheduleTaint.Key,
+								Key:    corev1beta1.DisruptedNoScheduleTaint.Key,
 								Effect: "",
 							},
 						},
@@ -244,7 +244,7 @@ func TestPreStopHook(t *testing.T) {
 					Spec: v1.NodeSpec{
 						Taints: []v1.Taint{
 							{
-								Key:    corev1beta1.DisruptionNoScheduleTaint.Key,
+								Key:    corev1beta1.DisruptedNoScheduleTaint.Key,
 								Effect: v1.TaintEffectNoSchedule,
 							},
 						},
@@ -276,7 +276,7 @@ func TestPreStopHook(t *testing.T) {
 					Spec: v1.NodeSpec{
 						Taints: []v1.Taint{
 							{
-								Key:    corev1beta1.DisruptionNoScheduleTaint.Key,
+								Key:    corev1beta1.DisruptedNoScheduleTaint.Key,
 								Effect: v1.TaintEffectNoSchedule,
 							},
 						},
@@ -316,7 +316,7 @@ func TestPreStopHook(t *testing.T) {
 					Spec: v1.NodeSpec{
 						Taints: []v1.Taint{
 							{
-								Key:    corev1beta1.DisruptionNoScheduleTaint.Key,
+								Key:    corev1beta1.DisruptedNoScheduleTaint.Key,
 								Effect: v1.TaintEffectNoSchedule,
 							},
 						},
