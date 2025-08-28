@@ -854,6 +854,10 @@ func (d *ControllerService) ListSnapshots(ctx context.Context, req *csi.ListSnap
 	return response, nil
 }
 
+func (*ControllerService) ControllerModifyVolume(ctx context.Context, req *csi.ControllerModifyVolumeRequest) (*csi.ControllerModifyVolumeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ControllerModifyVolume not implemented")
+}
+
 // pickAvailabilityZone selects 1 zone given topology requirement.
 // if not found, empty string is returned.
 func pickAvailabilityZone(requirement *csi.TopologyRequirement) string {

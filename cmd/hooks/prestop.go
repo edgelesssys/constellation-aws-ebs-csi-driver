@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
-	corev1beta1 "sigs.k8s.io/karpenter/pkg/apis/v1beta1"
+	corev1beta1 "sigs.k8s.io/karpenter/pkg/apis/v1"
 )
 
 /*
@@ -70,7 +70,7 @@ func isNodeBeingDrained(node *v1.Node) bool {
 		}
 
 		// Karpenter eviction taint
-		if corev1beta1.IsDisruptingTaint(taint) {
+		if taint.MatchTaint(&corev1beta1.DisruptedNoScheduleTaint) || taint.Value == corev1beta1.DisruptedNoScheduleTaint.Value {
 			return true
 		}
 
