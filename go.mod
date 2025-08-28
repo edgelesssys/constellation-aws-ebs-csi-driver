@@ -4,7 +4,7 @@ go 1.24.6
 
 replace (
 	github.com/google/cel-go => github.com/google/cel-go v0.17.7 // Mitigate https://github.com/kubernetes/apiserver/issues/97
-	github.com/martinjungblut/go-cryptsetup => github.com/edgelesssys/go-cryptsetup v0.0.0-20250821104430-e7e52279791d
+	github.com/martinjungblut/go-cryptsetup => github.com/edgelesssys/go-cryptsetup v0.0.0-20250822075033-840d240dddf8
 	k8s.io/api => k8s.io/api v0.33.4
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.33.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.33.4
@@ -48,7 +48,7 @@ require (
 	github.com/aws/smithy-go v1.22.5
 	github.com/awslabs/volume-modifier-for-k8s v0.1.3
 	github.com/container-storage-interface/spec v1.9.0
-	github.com/edgelesssys/constellation/v2 v2.11.1-0.20250821135258-c5d2e6aec565
+	github.com/edgelesssys/constellation/v2 v2.11.1-0.20250828083424-bb8d2c8a5c0a
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -72,7 +72,7 @@ require (
 	k8s.io/client-go v0.33.4
 	k8s.io/component-base v0.33.4
 	k8s.io/klog/v2 v2.130.1
-	k8s.io/kubernetes v1.33.3
+	k8s.io/kubernetes v1.33.4
 	k8s.io/mount-utils v0.33.3
 	k8s.io/pod-security-admission v0.30.1
 	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
