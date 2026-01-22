@@ -1,5 +1,13 @@
 # AWS PVC CSI Driver for [Constellation](https://github.com/edgelesssys/constellation)
 
+> [!IMPORTANT]
+> **Constellation is no longer actively maintained by Edgeless Systems.**
+> 
+> This project is no longer receiving updates or support from Edgeless Systems. The repository remains available for archival purposes and community use.
+> New development continues in Contrast, which provides workload-level confidential computing using Confidential Containers.
+> 👉 https://github.com/edgelesssys/contrast
+
+
 This is a fork of the [AWS CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver), extending it by disk encryption features.
 
 ## How to Build
